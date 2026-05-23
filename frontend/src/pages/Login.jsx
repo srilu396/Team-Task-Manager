@@ -134,7 +134,7 @@ const Login = () => {
       <div className="w-full max-w-[850px] bg-white rounded-[1.5rem] shadow-2xl flex flex-col lg:flex-row overflow-hidden relative z-10 min-h-[500px]">
         
         {/* Left Side - Premium Blue Gradient Theme */}
-        <div className="w-full lg:w-5/12 bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-500 p-6 flex flex-col justify-between relative overflow-hidden rounded-r-[1.5rem] lg:rounded-r-[2rem] lg:rounded-bl-[1.5rem] lg:rounded-tl-[1.5rem] m-1.5 shadow-inner">
+        <div className="hidden lg:flex lg:w-5/12 bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-500 p-6 flex-col justify-between relative overflow-hidden rounded-bl-[1.5rem] lg:rounded-tl-[1.5rem] m-1.5 shadow-inner">
 
           {/* Center Graphic Card with Carousel */}
           <div className="w-full flex justify-center items-center flex-grow z-10 relative perspective-1000">

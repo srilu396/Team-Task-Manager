@@ -40,9 +40,9 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="p-[24px] space-y-[24px] max-w-[1400px] mx-auto pb-10">
+      <div className="p-4 sm:p-[24px] space-y-4 sm:space-y-[24px] max-w-[1400px] mx-auto pb-10">
         <Skeleton className="h-10 w-1/3 mb-6" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[16px]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[16px]">
           {[1,2,3,4].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-[24px]">
@@ -77,7 +77,7 @@ const Dashboard = () => {
   const totalMembers = stats?.totalMembers || 0;
 
   return (
-    <div className="p-[24px] space-y-[24px] max-w-[1400px] mx-auto pb-10">
+    <div className="p-4 sm:p-[24px] space-y-4 sm:space-y-[24px] max-w-[1400px] mx-auto pb-10">
       {/* TEAM CODE ONBOARDING BANNER FOR ADMINS */}
       {user?.role === 'admin' && user?.teamCode && totalMembers === 0 && (
         <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 rounded-xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm">
@@ -347,7 +347,7 @@ const Dashboard = () => {
               <h2 className="text-[18px] font-semibold text-gray-900">Tasks by Status</h2>
             </div>
             <div className="p-[20px]">
-              <div className="grid grid-cols-4 gap-[16px] mb-6">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-[16px] mb-6">
                 {['todo', 'in_progress', 'review', 'done'].map((status) => {
                   const labelMap = { todo: 'TODO', in_progress: 'IN PROGRESS', review: 'REVIEW', done: 'DONE' };
                   const colorMap = { todo: 'bg-gray-400', in_progress: 'bg-blue-500', review: 'bg-amber-500', done: 'bg-green-500' };
@@ -370,13 +370,15 @@ const Dashboard = () => {
                 {stats?.recentTasks?.slice(0, 8).map(task => (
                   <div key={task._id} className="flex justify-between items-center p-3 border border-gray-200 rounded-[12px] hover:shadow-sm hover:border-gray-300 cursor-pointer transition-all" onClick={() => navigate(`/projects/${task.project?._id}`)}>
                     <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="w-2 h-2 rounded-full border border-gray-400"></span>
+                      <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                        <span className="w-2 h-2 rounded-full border border-gray-400 shrink-0"></span>
                         <span className="font-semibold text-[14px] text-gray-900">{task.title}</span>
-                        <Badge color={task.priority}>{task.priority}</Badge>
-                        <Badge color={task.status}>{task.status.replace('_', ' ')}</Badge>
+                        <div className="flex flex-wrap gap-1.5">
+                          <Badge color={task.priority}>{task.priority}</Badge>
+                          <Badge color={task.status}>{task.status.replace('_', ' ')}</Badge>
+                        </div>
                       </div>
-                      <div className="text-[13px] text-gray-500 flex items-center gap-2 ml-4">
+                      <div className="text-[12px] sm:text-[13px] text-gray-500 flex flex-wrap items-center gap-1.5 sm:gap-2 ml-0 sm:ml-4">
                         <span>{task.project?.name || 'Project'}</span>
                         <span>·</span>
                         <span>Assigned: {task.assignedTo?.fullName || 'Unassigned'}</span>

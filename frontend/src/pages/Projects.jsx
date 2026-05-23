@@ -45,7 +45,7 @@ const Projects = () => {
   );
 
   return (
-    <div className="p-[24px] space-y-[24px] max-w-[1400px] mx-auto pb-10">
+    <div className="p-4 sm:p-[24px] space-y-4 sm:space-y-[24px] max-w-[1400px] mx-auto pb-10">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-[24px] font-bold text-gray-900">Projects</h1>
@@ -84,12 +84,12 @@ const Projects = () => {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[16px]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[16px]">
           {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-48 rounded-[12px]" />)}
         </div>
       ) : filteredProjects.length > 0 ? (
         viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[16px]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[16px]">
             {filteredProjects.map(project => (
               <ProjectCard 
                 key={project._id} 
@@ -99,8 +99,8 @@ const Projects = () => {
             ))}
           </div>
         ) : (
-          <div className="bg-white border border-gray-200 rounded-[12px] overflow-hidden shadow-sm">
-            <table className="w-full text-left border-collapse">
+          <div className="bg-white border border-gray-200 rounded-[12px] overflow-x-auto shadow-sm scrollbar-thin">
+            <table className="w-full text-left border-collapse min-w-[650px]">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200 text-[13px] font-semibold text-gray-500">
                   <th className="px-5 py-3 font-medium">Project Name</th>

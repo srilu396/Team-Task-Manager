@@ -222,8 +222,8 @@ const ProjectDetail = () => {
         {activeTab === 'members' && (
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             {isAdmin && (
-              <div className="p-4 border-b border-gray-200 bg-gray-50 flex items-end gap-4">
-                <div className="flex-1 max-w-md">
+              <div className="p-4 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row sm:items-end gap-3">
+                <div className="w-full sm:flex-1 sm:max-w-md">
                   <Input 
                     label="Add Member by Email"
                     value={newMemberEmail}
@@ -231,7 +231,7 @@ const ProjectDetail = () => {
                     placeholder="user@example.com"
                   />
                 </div>
-                <Button onClick={handleAddMember} disabled={addingMember || !newMemberEmail.trim()}>
+                <Button onClick={handleAddMember} disabled={addingMember || !newMemberEmail.trim()} className="w-full sm:w-auto justify-center">
                   {addingMember ? 'Adding...' : 'Add Member'}
                 </Button>
               </div>

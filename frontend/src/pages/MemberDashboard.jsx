@@ -38,9 +38,9 @@ const MemberDashboard = () => {
 
   if (loading) {
     return (
-      <div className="p-[24px] space-y-[24px] max-w-[1400px] mx-auto pb-10">
+      <div className="p-4 sm:p-[24px] space-y-4 sm:space-y-[24px] max-w-[1400px] mx-auto pb-10">
         <Skeleton className="h-10 w-1/3 mb-6" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[16px]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[16px]">
           {[1,2,3,4].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}
         </div>
       </div>
@@ -121,7 +121,7 @@ const MemberDashboardContent = ({ stats, user, fetchStats }) => {
   }, {});
 
   return (
-    <div className="p-[24px] space-y-[24px] max-w-[1400px] mx-auto pb-10">
+    <div className="p-4 sm:p-[24px] space-y-4 sm:space-y-[24px] max-w-[1400px] mx-auto pb-10">
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
@@ -277,44 +277,22 @@ const MemberDashboardContent = ({ stats, user, fetchStats }) => {
               <h2 className="text-[18px] font-semibold text-gray-900">My Tasks</h2>
             </div>
             
-            <div style={{
-              display: 'flex',
-              width: '100%',
-              borderBottom: '2px solid #E5E7EB',
-              marginBottom: '16px'
-            }}>
+            <div className="flex overflow-x-auto scrollbar-none border-b border-gray-200 mb-4 whitespace-nowrap">
               {['All', 'In Progress', 'Todo', 'Review', 'Done'].map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  style={{
-                    flex: 1,
-                    textAlign: 'center',
-                    padding: '12px 0',
-                    fontSize: '14px',
-                    fontWeight: activeTab === tab ? '600' : '400',
-                    color: activeTab === tab ? '#4F46E5' : '#6B7280',
-                    borderBottom: activeTab === tab 
-                      ? '2px solid #4F46E5' 
-                      : '2px solid transparent',
-                    background: 'none',
-                    border: 'none',
-                    borderBottom: activeTab === tab 
-                      ? '2px solid #4F46E5' 
-                      : 'none',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
-                  }}
+                  className={`flex-1 sm:flex-none text-center px-4 py-3 text-sm font-semibold transition-all border-b-2 -mb-[1px] flex items-center justify-center ${
+                    activeTab === tab 
+                      ? 'border-indigo-600 text-indigo-600' 
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                  style={{ background: 'none', cursor: 'pointer' }}
                 >
                   {tab}
-                  <span style={{
-                    marginLeft: '6px',
-                    background: activeTab === tab ? '#EEF2FF' : '#F3F4F6',
-                    color: activeTab === tab ? '#4F46E5' : '#6B7280',
-                    padding: '2px 8px',
-                    borderRadius: '9999px',
-                    fontSize: '12px'
-                  }}>
+                  <span className={`ml-1.5 px-2 py-0.5 rounded-full text-xs font-bold ${
+                    activeTab === tab ? 'bg-indigo-50 text-indigo-600' : 'bg-gray-100 text-gray-500'
+                  }`}>
                     {getTabCount(tab)}
                   </span>
                 </button>
@@ -333,17 +311,17 @@ const MemberDashboardContent = ({ stats, user, fetchStats }) => {
                     <div className="border border-gray-200 rounded-[12px] divide-y divide-gray-100 overflow-hidden">
                       {groupedTasks[project].map(task => (
                         <div key={task._id} className="bg-white">
-                          <div className="p-4 flex items-start justify-between hover:bg-gray-50 transition-colors">
+                          <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-gray-50 transition-colors">
                             <div className="flex items-start gap-3 flex-1 cursor-pointer" onClick={() => toggleTaskExpand(task._id)}>
-                              <button className="mt-1 text-gray-400 hover:text-gray-600">
+                              <button className="mt-1 text-gray-400 hover:text-gray-600 shrink-0">
                                 {expandedTasks[task._id] ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                               </button>
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className="font-semibold text-[14px] text-gray-900">{task.title}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-wrap items-center gap-2 mb-1">
+                                  <span className="font-semibold text-[14px] text-gray-900 truncate max-w-[200px] sm:max-w-none">{task.title}</span>
                                   <Badge color={task.priority}>{task.priority}</Badge>
                                 </div>
-                                <div className="text-[13px] text-gray-500 flex items-center gap-3">
+                                <div className="text-[13px] text-gray-500 flex flex-wrap items-center gap-3">
                                   {task.dueDate && (
                                     <span className="flex items-center gap-1">
                                       <Calendar className="w-3.5 h-3.5" /> Due: {new Date(task.dueDate).toLocaleDateString()}
@@ -356,11 +334,11 @@ const MemberDashboardContent = ({ stats, user, fetchStats }) => {
                               </div>
                             </div>
                             
-                            <div className="flex items-center gap-3 ml-4">
+                            <div className="flex items-center gap-3 ml-0 sm:ml-4 w-full sm:w-auto justify-end shrink-0">
                               <select 
                                 value={task.status}
                                 onChange={(e) => handleStatusChange(task._id, e.target.value)}
-                                className="text-[13px] border-gray-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 py-1.5 pl-3 pr-8 font-medium bg-gray-50"
+                                className="text-[13px] border-gray-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 py-1.5 pl-3 pr-8 font-medium bg-gray-50 cursor-pointer w-full sm:w-auto"
                               >
                                 <option value="todo">Todo</option>
                                 <option value="in_progress">In Progress</option>
