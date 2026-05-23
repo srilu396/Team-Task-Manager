@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { ToastContext } from '../context/ToastContext';
 import userService from '../services/user.service';
+import projectService from '../services/project.service';
 import Avatar from '../components/ui/Avatar';
 import Badge from '../components/ui/Badge';
 import Skeleton from '../components/ui/Skeleton';
@@ -13,8 +14,14 @@ const Team = () => {
   const { user: currentUser } = useContext(AuthContext);
   const { showToast } = useContext(ToastContext);
 
+  const [selectedUserIds, setSelectedUserIds] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [selectedProjectId, setSelectedProjectId] = useState('');
+  const [assigning, setAssigning] = useState(false);
+
   useEffect(() => {
     fetchUsers();
+    fetchProjects();
   }, []);
 
   const fetchUsers = async () => {
@@ -29,8 +36,39 @@ const Team = () => {
     }
   };
 
+  const fetchProjects = async () => {
+    try {
+      const data = await projectService.getProjects();
+      setProjects(data);
+    } catch (error) {
+      console.error('Failed to load projects', error);
+    }
+  };
+
+  const toggleUserSelection = (userId) => {
+    setSelectedUserIds(prev => 
+      prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
+    );
+  };
+
+  const handleBulkAssign = async () => {
+    if (!selectedProjectId) return;
+    try {
+      setAssigning(true);
+      await projectService.addMembersBulk(selectedProjectId, selectedUserIds);
+      const projName = projects.find(p => p._id === selectedProjectId)?.name || 'the project';
+      showToast(`Assigned ${selectedUserIds.length} members to "${projName}" successfully`, 'success');
+      setSelectedUserIds([]);
+      setSelectedProjectId('');
+    } catch (error) {
+      showToast('Failed to assign members to project', 'error');
+    } finally {
+      setAssigning(false);
+    }
+  };
+
   const handleRoleToggle = async (userId, currentRole) => {
-    if (userId === currentUser.id) {
+    if (userId === (currentUser.id || currentUser._id)) {
       showToast('You cannot change your own role', 'error');
       return;
     }
@@ -81,20 +119,31 @@ const Team = () => {
             </div>
           ))
         ) : (
-          users.map(u => (
-            <div key={u._id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col items-center text-center hover:shadow-md transition-shadow">
+          users.filter(u => u.role !== 'admin' && u._id !== (currentUser.id || currentUser._id)).map(u => (
+            <div key={u._id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col items-center text-center hover:shadow-md transition-shadow relative">
+              {/* Checkbox for selection */}
+              <div className="absolute top-4 left-4">
+                <input 
+                  type="checkbox"
+                  checked={selectedUserIds.includes(u._id)}
+                  onChange={() => toggleUserSelection(u._id)}
+                  className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                />
+              </div>
+
               <Avatar name={u.fullName} size="xl" className="mb-4" />
               <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-1">{u.fullName}</h3>
-              <p className="text-sm text-gray-500 mb-4 line-clamp-1">{u.email}</p>
+              <p className="text-sm text-gray-500 mb-2 line-clamp-1">{u.email}</p>
+              <p className="text-xs font-medium text-gray-600 mb-4 bg-gray-100 px-2 py-1 rounded-md">{u.assignedTasksCount || 0} Assigned Tasks</p>
               
               <div className="mt-auto flex flex-col items-center gap-3 w-full">
                 <Badge color={u.role === 'admin' ? 'indigo' : 'gray'} className="px-3 py-1 text-xs">
-                  {u.role.toUpperCase()}
+                  {(u.role || 'member').toUpperCase()}
                 </Badge>
                 
-                {u._id !== currentUser.id && (
+                {u._id !== (currentUser.id || currentUser._id) && (
                   <button
-                    onClick={() => handleRoleToggle(u._id, u.role)}
+                    onClick={() => handleRoleToggle(u._id, u.role || 'member')}
                     className={`flex items-center justify-center w-full gap-2 px-4 py-2 mt-2 text-sm font-medium rounded-lg transition-colors ${
                       u.role === 'admin' 
                         ? 'text-red-600 bg-red-50 hover:bg-red-100'
@@ -109,7 +158,7 @@ const Team = () => {
                   </button>
                 )}
                 
-                {u._id === currentUser.id && (
+                {u._id === (currentUser.id || currentUser._id) && (
                   <div className="w-full px-4 py-2 mt-2 text-sm text-gray-400 bg-gray-50 rounded-lg">
                     Current User
                   </div>
@@ -119,6 +168,50 @@ const Team = () => {
           ))
         )}
       </div>
+
+      {/* Floating Bulk Action Dock */}
+      {selectedUserIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-2xl bg-white border border-gray-200 shadow-2xl rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-semibold">
+              {selectedUserIds.length} Selected
+            </span>
+            <span className="text-gray-600 text-sm font-medium">Assign them to a project:</span>
+          </div>
+          
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <select
+              value={selectedProjectId}
+              onChange={(e) => setSelectedProjectId(e.target.value)}
+              className="flex-1 sm:flex-none px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-white text-sm"
+            >
+              <option value="">Choose a Project...</option>
+              {projects.map(proj => (
+                <option key={proj._id} value={proj._id}>{proj.name}</option>
+              ))}
+            </select>
+            
+            <button
+              onClick={handleBulkAssign}
+              disabled={!selectedProjectId || assigning}
+              className={`px-4 py-2 text-sm font-semibold text-white rounded-lg transition-all ${
+                !selectedProjectId || assigning 
+                  ? 'bg-indigo-300 cursor-not-allowed' 
+                  : 'bg-indigo-600 hover:bg-indigo-700 shadow-md hover:shadow-lg'
+              }`}
+            >
+              {assigning ? 'Assigning...' : 'Assign'}
+            </button>
+            
+            <button
+              onClick={() => setSelectedUserIds([])}
+              className="text-sm font-medium text-gray-500 hover:text-gray-800 px-2 py-1"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

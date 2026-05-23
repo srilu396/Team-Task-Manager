@@ -100,6 +100,21 @@ const TaskModal = ({ isOpen, onClose, task, project, onTaskUpdated, isNew = fals
 
   const canEdit = user?.role === 'admin' || isNew || task?.assignedTo?._id === user?.id || task?.createdBy?._id === user?.id;
 
+  const handleDeleteTask = async () => {
+    if (!window.confirm('Are you sure you want to delete this task?')) return;
+    setLoading(true);
+    try {
+      await taskService.deleteTask(task._id);
+      showToast('Task deleted successfully', 'success');
+      onTaskUpdated();
+      onClose();
+    } catch (error) {
+      showToast('Failed to delete task', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Modal 
       isOpen={isOpen} 
@@ -140,11 +155,22 @@ const TaskModal = ({ isOpen, onClose, task, project, onTaskUpdated, isNew = fals
                   value={formData.status}
                   onChange={handleChange}
                   className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white"
+                  disabled={!canEdit}
                 >
-                  <option value="todo">To Do</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="review">Review</option>
-                  <option value="done">Done</option>
+                  {project?.customStatuses && project.customStatuses.length > 0 ? (
+                    project.customStatuses.map(status => (
+                      <option key={status.name} value={status.name.toLowerCase().replace(' ', '_')}>
+                        {status.name}
+                      </option>
+                    ))
+                  ) : (
+                    <>
+                      <option value="todo">To Do</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="review">Review</option>
+                      <option value="done">Done</option>
+                    </>
+                  )}
                 </select>
               </div>
               
@@ -231,13 +257,22 @@ const TaskModal = ({ isOpen, onClose, task, project, onTaskUpdated, isNew = fals
         )}
       </div>
       
-      <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
-        <Button variant="secondary" onClick={onClose} type="button">
-          Cancel
-        </Button>
-        <Button type="submit" form="task-form" disabled={loading}>
-          {loading ? 'Saving...' : 'Save Task'}
-        </Button>
+      <div className="flex justify-between mt-6 pt-4 border-t border-gray-100">
+        <div>
+          {!isNew && user?.role === 'admin' && (
+            <Button variant="danger" onClick={handleDeleteTask} disabled={loading} type="button">
+              Delete Task
+            </Button>
+          )}
+        </div>
+        <div className="flex gap-3">
+          <Button variant="secondary" onClick={onClose} type="button">
+            Cancel
+          </Button>
+          <Button type="submit" form="task-form" disabled={loading}>
+            {loading ? 'Saving...' : isNew ? 'Create Task' : 'Save Task'}
+          </Button>
+        </div>
       </div>
     </Modal>
   );

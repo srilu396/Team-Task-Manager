@@ -1,286 +1,518 @@
 import React, { useState, useEffect, useContext } from 'react';
 import dashboardService from '../services/dashboard.service';
 import { ToastContext } from '../context/ToastContext';
+import { AuthContext } from '../context/AuthContext';
 import Skeleton from '../components/ui/Skeleton';
-import { Link } from 'react-router-dom';
+import Card from '../components/ui/Card';
+import Badge from '../components/ui/Badge';
+import Button from '../components/ui/Button';
+import { FolderKanban, CheckSquare, Users, AlertCircle, Plus, Calendar, Clock, ArrowRight, MessageSquare, X } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [dismissOverdue, setDismissOverdue] = useState(false);
   const { showToast } = useContext(ToastContext);
-
-  useEffect(() => {
-    fetchStats();
-  }, []);
+  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const fetchStats = async () => {
     try {
-      setLoading(true);
+      setError(false);
       const data = await dashboardService.getStats();
       setStats(data);
     } catch (error) {
+      console.error(error);
+      setError(true);
       showToast('Failed to load dashboard stats', 'error');
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchStats();
+    const interval = setInterval(fetchStats, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   if (loading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-24 rounded-xl" />
-        <Skeleton className="h-64 rounded-xl" />
-        <Skeleton className="h-64 rounded-xl" />
+      <div className="p-[24px] space-y-[24px] max-w-[1400px] mx-auto pb-10">
+        <Skeleton className="h-10 w-1/3 mb-6" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[16px]">
+          {[1,2,3,4].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-[24px]">
+          <div className="lg:col-span-8 space-y-[24px]">
+            <Skeleton className="h-64 rounded-xl" />
+            <Skeleton className="h-64 rounded-xl" />
+          </div>
+          <div className="lg:col-span-4 space-y-[24px]">
+            <Skeleton className="h-96 rounded-xl" />
+          </div>
+        </div>
       </div>
     );
   }
 
+  if (error && !stats) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 bg-white rounded-xl border border-gray-200">
+        <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
+        <h2 className="text-[18px] font-semibold text-gray-900 mb-2">Failed to load data</h2>
+        <p className="text-[14px] text-gray-500 mb-4">There was a problem connecting to the server.</p>
+        <Button onClick={() => { setLoading(true); fetchStats(); }}>Try Again</Button>
+      </div>
+    );
+  }
+
+  const totalTasks = stats?.totalTasks || 0;
+  const completedTasks = stats?.completedTasks || 0;
+  const completionPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  const overdueTasksCount = stats?.overdueTasks || 0;
+  const totalProjects = stats?.totalProjects || 0;
+  const totalMembers = stats?.totalMembers || 0;
+
   return (
-    <div className="space-y-8 max-w-6xl mx-auto pb-10">
-      <div>
-        <h1 className="text-2xl font-bold text-text-main mb-1">Project Overview</h1>
-        <p className="text-text-muted text-sm">Track progress and manage your team's workflow across all active initiatives.</p>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Tasks */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-          <div className="flex justify-between items-start mb-4">
-            <span className="text-xs font-bold text-text-muted uppercase tracking-wider">Total Tasks</span>
-            <div className="w-8 h-8 bg-blue-50 text-blue-600 rounded flex items-center justify-center">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-            </div>
+    <div className="p-[24px] space-y-[24px] max-w-[1400px] mx-auto pb-10">
+      {/* OVERDUE ALERT BANNER */}
+      {overdueTasksCount > 0 && !dismissOverdue && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex justify-between items-center text-red-800">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600" />
+            <span className="font-medium text-[14px]">{overdueTasksCount} tasks are overdue! Review them now.</span>
           </div>
-          <div className="text-3xl font-bold text-text-main mb-2">{stats?.totalTasks || 0}</div>
-          <div className="text-sm font-medium text-emerald-600 flex items-center gap-1">
-             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-             +12% from last week
+          <div className="flex items-center gap-4">
+            <button onClick={() => navigate('/projects')} className="text-[14px] font-semibold hover:underline">View Overdue →</button>
+            <button onClick={() => setDismissOverdue(true)} className="text-red-400 hover:text-red-600"><X className="w-5 h-5" /></button>
           </div>
         </div>
+      )}
 
-        {/* In Progress */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-          <div className="flex justify-between items-start mb-4">
-            <span className="text-xs font-bold text-text-muted uppercase tracking-wider">In Progress</span>
-            <div className="w-8 h-8 bg-cyan-50 text-cyan-600 rounded flex items-center justify-center">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            </div>
-          </div>
-          <div className="text-3xl font-bold text-text-main mb-2">{stats?.tasksByStatus?.in_progress || 0}</div>
-          <div className="text-sm font-medium text-text-muted">Currently active</div>
+      {/* HEADER SECTION */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+        <div>
+          <h1 className="text-[24px] font-bold text-gray-900 mb-1">Good {new Date().getHours() < 12 ? 'morning' : 'afternoon'}, {user?.fullName || 'Admin'}! 👋</h1>
+          <p className="text-[14px] text-gray-500">Here's what's happening with your projects</p>
         </div>
-
-        {/* Completed */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-          <div className="flex justify-between items-start mb-4">
-            <span className="text-xs font-bold text-text-muted uppercase tracking-wider">Completed</span>
-            <div className="w-8 h-8 bg-emerald-50 text-emerald-600 rounded flex items-center justify-center">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            </div>
-          </div>
-          <div className="text-3xl font-bold text-text-main mb-2">{stats?.completedTasks || 0}</div>
-          <div className="text-sm font-medium text-emerald-600 flex items-center gap-1">
-             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-             94% on-time delivery
-          </div>
-        </div>
-
-        {/* Overdue */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-          <div className="flex justify-between items-start mb-4">
-            <span className="text-xs font-bold text-text-muted uppercase tracking-wider">Overdue</span>
-            <div className="w-8 h-8 bg-red-50 text-red-600 rounded flex items-center justify-center font-bold text-lg">
-              !
-            </div>
-          </div>
-          <div className="text-3xl font-bold text-red-600 mb-2">{stats?.overdueTasks || 0}</div>
-          <div className="text-sm font-medium text-red-600">Needs attention</div>
+        <div className="flex items-center gap-4">
+          <span className="text-[14px] text-gray-600 font-medium">
+            {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </span>
+          <Button onClick={() => navigate('/projects')} className="gap-2">
+            <Plus className="w-4 h-4" /> New Project
+          </Button>
         </div>
       </div>
 
-      {/* Active Projects (Placeholder for dynamic data) */}
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-bold text-text-main">Active Projects</h2>
-          <Link to="/projects" className="text-sm font-bold text-primary hover:text-primary-hover flex items-center gap-1">
-            View All <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
-          </Link>
+      {/* STATS ROW (4 cards) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-[16px]">
+        {/* Card 1 - Active Projects */}
+        <div style={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          borderRadius: '16px',
+          padding: '24px',
+          color: 'white',
+          position: 'relative',
+          overflow: 'hidden',
+          boxShadow: '0 10px 20px rgba(0,0,0,0.12)',
+          border: 'none'
+        }}>
+          <div style={{
+            position: 'absolute',
+            width: '120px',
+            height: '120px',
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.1)',
+            top: '-20px',
+            right: '-20px'
+          }} />
+          <div className="absolute top-4 right-4 text-white">
+            <FolderKanban size={24} style={{ color: 'white' }} />
+          </div>
+          <div className="relative z-10 flex flex-col justify-between h-full min-h-[90px]">
+            <div>
+              <div className="text-[32px] font-bold leading-tight">{totalProjects}</div>
+              <div className="text-[14px] font-semibold opacity-90 mt-1">Active Projects</div>
+            </div>
+            <div className="text-[11px] opacity-75 mt-3 pt-1 border-t border-white/10">
+              Total projects in workspace
+            </div>
+          </div>
         </div>
+
+        {/* Card 2 - Total Tasks */}
+        <div style={{
+          background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+          borderRadius: '16px',
+          padding: '24px',
+          color: 'white',
+          position: 'relative',
+          overflow: 'hidden',
+          boxShadow: '0 10px 20px rgba(0,0,0,0.12)',
+          border: 'none'
+        }}>
+          <div style={{
+            position: 'absolute',
+            width: '120px',
+            height: '120px',
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.1)',
+            top: '-20px',
+            right: '-20px'
+          }} />
+          <div className="absolute top-4 right-4 text-white">
+            <CheckSquare size={24} style={{ color: 'white' }} />
+          </div>
+          <div className="relative z-10 flex flex-col justify-between h-full min-h-[90px]">
+            <div>
+              <div className="text-[32px] font-bold leading-tight">{totalTasks}</div>
+              <div className="text-[14px] font-semibold opacity-90 mt-1">Total Tasks</div>
+            </div>
+            <div className="text-[11px] opacity-90 mt-3 pt-1 border-t border-white/10">
+              <div className="flex justify-between mb-1">
+                <span>{completedTasks} completed</span>
+                <span>{completionPercentage}%</span>
+              </div>
+              <div className="w-full bg-white/20 rounded-full h-1">
+                <div className="bg-white h-1 rounded-full" style={{ width: `${completionPercentage}%` }}></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3 - Team Members */}
+        <div style={{
+          background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+          borderRadius: '16px',
+          padding: '24px',
+          color: 'white',
+          position: 'relative',
+          overflow: 'hidden',
+          boxShadow: '0 10px 20px rgba(0,0,0,0.12)',
+          border: 'none'
+        }}>
+          <div style={{
+            position: 'absolute',
+            width: '120px',
+            height: '120px',
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.1)',
+            top: '-20px',
+            right: '-20px'
+          }} />
+          <div className="absolute top-4 right-4 text-white">
+            <Users size={24} style={{ color: 'white' }} />
+          </div>
+          <div className="relative z-10 flex flex-col justify-between h-full min-h-[90px]">
+            <div>
+              <div className="text-[32px] font-bold leading-tight">{totalMembers}</div>
+              <div className="text-[14px] font-semibold opacity-90 mt-1">Team Members</div>
+            </div>
+            <div className="text-[11px] opacity-75 mt-3 pt-1 border-t border-white/10">
+              {stats?.teamOverview?.filter(u => u.inProgressTasks > 0).length || 0} active today
+            </div>
+          </div>
+        </div>
+
+        {/* Card 4 - Overdue */}
+        <div style={{
+          background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+          borderRadius: '16px',
+          padding: '24px',
+          color: 'white',
+          position: 'relative',
+          overflow: 'hidden',
+          boxShadow: '0 10px 20px rgba(0,0,0,0.12)',
+          border: 'none'
+        }}>
+          <div style={{
+            position: 'absolute',
+            width: '120px',
+            height: '120px',
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.1)',
+            top: '-20px',
+            right: '-20px'
+          }} />
+          <div className="absolute top-4 right-4 text-white">
+            <AlertCircle size={24} style={{ color: 'white' }} />
+          </div>
+          <div className="relative z-10 flex flex-col justify-between h-full min-h-[90px]">
+            <div>
+              <div className="text-[32px] font-bold leading-tight">{overdueTasksCount}</div>
+              <div className="text-[14px] font-semibold opacity-90 mt-1">Overdue Tasks</div>
+            </div>
+            <div className="text-[11px] opacity-90 mt-3 pt-1 border-t border-white/10">
+              <div className="flex justify-between mb-1">
+                <span>Needs attention</span>
+                <span>{overdueTasksCount > 0 ? 'Urgent' : 'All clear'}</span>
+              </div>
+              <div className="w-full bg-white/20 rounded-full h-1">
+                <div className="bg-white h-1 rounded-full" style={{ width: `${overdueTasksCount > 0 ? 100 : 0}%` }}></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* MAIN CONTENT AREA */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-[24px]">
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-xl border-l-4 border-l-primary border-y border-r border-gray-200 p-5 shadow-sm flex flex-col justify-between">
-             <div>
-                 <div className="flex justify-between items-start mb-2">
-                     <h3 className="font-bold text-text-main">Nebula Dashboard</h3>
-                     <span className="px-3 py-1 bg-cyan-100 text-cyan-800 text-xs font-bold rounded-full">IN PROGRESS</span>
-                 </div>
-                 <p className="text-sm text-text-muted mb-6 line-clamp-2">UI/UX redesign and front-end implementation for the new...</p>
-             </div>
-             <div>
-                 <div className="flex justify-between text-sm font-medium mb-1">
-                     <span className="text-text-muted">Progress</span>
-                     <span className="text-text-main">65%</span>
-                 </div>
-                 <div className="w-full bg-gray-100 rounded-full h-1.5 mb-4">
-                     <div className="bg-primary h-1.5 rounded-full" style={{ width: '65%' }}></div>
-                 </div>
-                 <div className="flex justify-between items-center">
-                     <div className="flex -space-x-2">
-                         <div className="w-6 h-6 rounded-full bg-slate-300 border border-white"></div>
-                         <div className="w-6 h-6 rounded-full bg-slate-400 border border-white"></div>
-                         <div className="w-6 h-6 rounded-full bg-slate-500 border border-white"></div>
-                     </div>
-                     <div className="text-xs font-medium text-text-muted flex items-center gap-1">
-                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                         Due Jun 12
-                     </div>
-                 </div>
-             </div>
-          </div>
-
-          <div className="bg-white rounded-xl border-l-4 border-l-cyan-500 border-y border-r border-gray-200 p-5 shadow-sm flex flex-col justify-between">
-             <div>
-                 <div className="flex justify-between items-start mb-2">
-                     <h3 className="font-bold text-text-main">API Integration</h3>
-                     <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold rounded-full">ON HOLD</span>
-                 </div>
-                 <p className="text-sm text-text-muted mb-6 line-clamp-2">Connecting third-party payment gateways and authentication...</p>
-             </div>
-             <div>
-                 <div className="flex justify-between text-sm font-medium mb-1">
-                     <span className="text-text-muted">Progress</span>
-                     <span className="text-text-main">30%</span>
-                 </div>
-                 <div className="w-full bg-gray-100 rounded-full h-1.5 mb-4">
-                     <div className="bg-cyan-500 h-1.5 rounded-full" style={{ width: '30%' }}></div>
-                 </div>
-                 <div className="flex justify-between items-center">
-                     <div className="flex -space-x-2">
-                         <div className="w-6 h-6 rounded-full bg-slate-400 border border-white"></div>
-                         <div className="w-6 h-6 rounded-full bg-slate-500 border border-white"></div>
-                     </div>
-                     <div className="text-xs font-medium text-text-muted flex items-center gap-1">
-                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                         Due Jul 05
-                     </div>
-                 </div>
-             </div>
-          </div>
-
-          <div className="bg-white rounded-xl border-l-4 border-l-red-500 border-y border-r border-gray-200 p-5 shadow-sm flex flex-col justify-between">
-             <div>
-                 <div className="flex justify-between items-start mb-2">
-                     <h3 className="font-bold text-text-main">Marketing Site</h3>
-                     <span className="px-3 py-1 bg-red-100 text-red-600 text-xs font-bold rounded-full">DELAYED</span>
-                 </div>
-                 <p className="text-sm text-text-muted mb-6 line-clamp-2">Complete overhaul of the public-facing website with new brand...</p>
-             </div>
-             <div>
-                 <div className="flex justify-between text-sm font-medium mb-1">
-                     <span className="text-text-muted">Progress</span>
-                     <span className="text-text-main">88%</span>
-                 </div>
-                 <div className="w-full bg-gray-100 rounded-full h-1.5 mb-4">
-                     <div className="bg-red-500 h-1.5 rounded-full" style={{ width: '88%' }}></div>
-                 </div>
-                 <div className="flex justify-between items-center">
-                     <div className="flex -space-x-2">
-                         <div className="w-6 h-6 rounded-full bg-slate-300 border border-white"></div>
-                         <div className="w-6 h-6 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center border border-white">+2</div>
-                     </div>
-                     <div className="text-xs font-bold text-red-600 flex items-center gap-1">
-                         ! Overdue 2d
-                     </div>
-                 </div>
-             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Tasks Table */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="text-lg font-bold text-text-main">Recent Tasks</h2>
-          <div className="flex items-center gap-4 text-sm font-medium text-text-muted">
-            <button className="flex items-center gap-1 hover:text-text-main">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
-              Filter
-            </button>
-            <button className="flex items-center gap-1 hover:text-text-main">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"></path></svg>
-              Sort
-            </button>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50/50 border-b border-gray-200">
-                <th className="py-3 px-5 text-xs font-bold text-text-muted uppercase tracking-wider">Task Name</th>
-                <th className="py-3 px-5 text-xs font-bold text-text-muted uppercase tracking-wider text-center">Priority</th>
-                <th className="py-3 px-5 text-xs font-bold text-text-muted uppercase tracking-wider">Assignee</th>
-                <th className="py-3 px-5 text-xs font-bold text-text-muted uppercase tracking-wider">Due Date</th>
-                <th className="py-3 px-5 text-xs font-bold text-text-muted uppercase tracking-wider text-right">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {stats?.recentTasks?.length > 0 ? (
-                stats.recentTasks.map(task => (
-                  <tr key={task._id} className="hover:bg-gray-50/50 transition-colors group">
-                    <td className="py-4 px-5">
-                      <div className="flex items-center gap-3">
-                        <input type="checkbox" className="w-4 h-4 border-gray-300 rounded text-primary focus:ring-primary opacity-50 group-hover:opacity-100 transition-opacity" />
-                        <Link to={task.project?._id ? `/projects/${task.project._id}?task=${task._id}` : '#'} className="font-medium text-text-main hover:text-primary">
-                          {task.title}
-                        </Link>
-                      </div>
-                    </td>
-                    <td className="py-4 px-5 text-center">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${
-                        task.priority === 'high' ? 'bg-red-100 text-red-600' :
-                        task.priority === 'medium' ? 'bg-cyan-100 text-cyan-600' :
-                        'bg-slate-100 text-slate-600'
-                      }`}>
-                        {task.priority?.toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="py-4 px-5">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-slate-300 text-[10px] font-bold text-white flex items-center justify-center">
-                           {task.assignedTo?.fullName?.charAt(0) || 'U'}
-                        </div>
-                        <span className="text-sm font-medium text-text-main">{task.assignedTo?.fullName || 'Unassigned'}</span>
-                      </div>
-                    </td>
-                    <td className="py-4 px-5 text-sm text-text-muted">
-                      {task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'No Due Date'}
-                    </td>
-                    <td className="py-4 px-5 text-right">
-                      <span className={`inline-flex items-center gap-1.5 text-sm font-medium ${
-                        task.status === 'done' ? 'text-emerald-600' :
-                        task.status === 'in_progress' ? 'text-text-muted' :
-                        'text-text-muted'
-                      }`}>
-                        {task.status === 'done' && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>}
-                        {task.status === 'in_progress' && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14M12 5l7 7-7 7"></path></svg>}
-                        {task.status === 'todo' && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>}
-                        {task.status === 'done' ? 'Done' : task.status === 'in_progress' ? 'In Progress' : 'Planned'}
-                      </span>
-                    </td>
-                  </tr>
-                ))
+        {/* LEFT COLUMN (65%) */}
+        <div className="lg:col-span-8 space-y-[24px]">
+          
+          {/* Block 1 - Project Progress */}
+          <Card className="p-0 overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-200 flex justify-between items-center">
+              <h2 className="text-[18px] font-semibold text-gray-900">Projects Overview</h2>
+              <Link to="/projects" className="text-[14px] font-medium text-blue-600 hover:text-blue-700">View All</Link>
+            </div>
+            <div className="p-[20px] space-y-[16px]">
+              {stats?.projectsProgress?.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <FolderKanban className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <p className="text-[14px]">No projects yet</p>
+                </div>
               ) : (
-                <tr>
-                  <td colSpan="5" className="py-8 text-center text-text-muted">No recent tasks</td>
-                </tr>
+                stats?.projectsProgress?.slice(0, 4).map(project => {
+                  const pct = project.totalTasks > 0 ? Math.round((project.tasksCompleted / project.totalTasks) * 100) : 0;
+                  const membersCount = project.members?.length || 0;
+                  return (
+                    <div key={project._id} className="border border-gray-200 rounded-[12px] p-4 hover:border-gray-300 transition-colors cursor-pointer" onClick={() => navigate(`/projects/${project._id}`)}>
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center gap-2">
+                          <FolderKanban className="w-5 h-5 text-gray-400" />
+                          <span className="text-[16px] font-semibold text-gray-900">{project.name}</span>
+                        </div>
+                        <Badge color={project.status === 'active' ? 'green' : 'gray'}>{project.status === 'active' ? 'Active ✓' : project.status}</Badge>
+                      </div>
+                      <div className="text-[14px] text-gray-500 mb-3">
+                        Tasks: {project.totalTasks} total · {project.tasksCompleted} done
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 bg-gray-100 rounded-full h-2">
+                          <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${pct}%` }}></div>
+                        </div>
+                        <span className="text-[13px] font-semibold text-gray-700 w-8">{pct}%</span>
+                      </div>
+                      <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100">
+                        <div className="flex items-center gap-2 text-[13px] text-gray-500">
+                          <Users className="w-3.5 h-3.5" /> {membersCount} members
+                        </div>
+                        {project.dueDate && (
+                          <div className="flex items-center gap-1.5 text-[13px] text-gray-500">
+                            <Calendar className="w-3.5 h-3.5" /> Due: {new Date(project.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })
               )}
-            </tbody>
-          </table>
+            </div>
+          </Card>
+
+          {/* Block 2 - Task Board Summary */}
+          <Card className="p-0 overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-200">
+              <h2 className="text-[18px] font-semibold text-gray-900">Tasks by Status</h2>
+            </div>
+            <div className="p-[20px]">
+              <div className="grid grid-cols-4 gap-[16px] mb-6">
+                {['todo', 'in_progress', 'review', 'done'].map((status) => {
+                  const labelMap = { todo: 'TODO', in_progress: 'IN PROGRESS', review: 'REVIEW', done: 'DONE' };
+                  const colorMap = { todo: 'bg-gray-400', in_progress: 'bg-blue-500', review: 'bg-amber-500', done: 'bg-green-500' };
+                  const count = stats?.tasksByStatus?.[status] || 0;
+                  const total = stats?.totalTasks || 1;
+                  const wPct = Math.max((count / total) * 100, 2);
+                  return (
+                    <div key={status} className="flex flex-col border border-gray-200 rounded-[12px] p-3 text-center cursor-pointer hover:bg-gray-50 transition-colors">
+                      <span className="text-[12px] font-semibold text-gray-500 mb-1">{labelMap[status]}</span>
+                      <span className="text-[20px] font-bold text-gray-900 mb-2">{count}</span>
+                      <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden flex justify-center mx-auto">
+                        <div className={`${colorMap[status]} h-1.5 rounded-full`} style={{ width: `${wPct}%` }}></div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+              
+              <div className="space-y-3">
+                {stats?.recentTasks?.slice(0, 8).map(task => (
+                  <div key={task._id} className="flex justify-between items-center p-3 border border-gray-200 rounded-[12px] hover:shadow-sm hover:border-gray-300 cursor-pointer transition-all" onClick={() => navigate(`/projects/${task.project?._id}`)}>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="w-2 h-2 rounded-full border border-gray-400"></span>
+                        <span className="font-semibold text-[14px] text-gray-900">{task.title}</span>
+                        <Badge color={task.priority}>{task.priority}</Badge>
+                        <Badge color={task.status}>{task.status.replace('_', ' ')}</Badge>
+                      </div>
+                      <div className="text-[13px] text-gray-500 flex items-center gap-2 ml-4">
+                        <span>{task.project?.name || 'Project'}</span>
+                        <span>·</span>
+                        <span>Assigned: {task.assignedTo?.fullName || 'Unassigned'}</span>
+                        {task.dueDate && (
+                          <>
+                            <span>·</span>
+                            <span>Due: {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {stats?.recentTasks?.length === 0 && (
+                  <div className="text-center py-4 text-[14px] text-gray-500">No tasks found</div>
+                )}
+                {stats?.recentTasks?.length > 8 && (
+                  <div className="text-center pt-2">
+                    <Button variant="secondary" onClick={() => navigate('/projects')} className="w-full">View All Tasks</Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </Card>
+
+          {/* Block 3 - Recent Activity */}
+          <Card className="p-0 overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-200">
+              <h2 className="text-[18px] font-semibold text-gray-900">Recent Activity</h2>
+            </div>
+            <div className="p-[20px]">
+              {stats?.recentActivity?.length === 0 ? (
+                <div className="text-center py-6 text-[14px] text-gray-500">No recent activity</div>
+              ) : (
+                <div className="relative border-l border-gray-200 ml-3 space-y-6">
+                  {stats?.recentActivity?.slice(0, 8).map((activity, i) => (
+                    <div key={i} className="pl-6 relative">
+                      <div className="absolute w-3 h-3 bg-blue-500 rounded-full -left-[6.5px] top-1.5 ring-4 ring-white"></div>
+                      <div className="text-[14px]">
+                        <span className="font-semibold text-gray-900">{activity.user?.fullName || 'User'}</span>
+                        <span className="text-gray-600 mx-1">{activity.action}</span>
+                        <span className="font-medium text-gray-900">"{activity.target}"</span>
+                      </div>
+                      <div className="text-[13px] text-gray-500 mt-0.5">
+                        {new Date(activity.createdAt).toLocaleString()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </Card>
         </div>
-        <div className="p-4 border-t border-gray-200 text-center bg-gray-50/50 hover:bg-gray-50 transition-colors cursor-pointer">
-           <span className="text-sm font-medium text-primary hover:text-primary-hover">Load More Tasks</span>
+
+        {/* RIGHT COLUMN (35%) */}
+        <div className="lg:col-span-4 space-y-[24px]">
+          
+          {/* Panel 1 - My Tasks Quick View */}
+          <Card className="p-0 overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-200">
+              <h2 className="text-[18px] font-semibold text-gray-900">My Tasks</h2>
+            </div>
+            <div className="p-0">
+              {stats?.overdueTasksList?.length === 0 ? (
+                <div className="p-5 text-center text-gray-500 text-[14px]">All caught up!</div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {stats?.overdueTasksList?.slice(0, 5).map(task => (
+                    <div key={task._id} className="p-[20px] hover:bg-gray-50 cursor-pointer flex justify-between items-center group" onClick={() => navigate(`/projects/${task.project?._id}`)}>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="w-2 h-2 rounded-full border border-gray-400"></span>
+                          <span className="font-semibold text-[14px] text-gray-900 truncate max-w-[180px]">{task.title}</span>
+                          <Badge color={task.priority}>{task.priority}</Badge>
+                        </div>
+                        <div className="flex items-center gap-2 text-[13px] text-red-500 font-medium ml-4">
+                          <Clock className="w-3.5 h-3.5" /> Overdue
+                        </div>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-blue-500 transition-colors" />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="px-5 py-3 border-t border-gray-200 bg-gray-50 text-center">
+              <Link to="/projects" className="text-[14px] font-medium text-blue-600 hover:text-blue-700">View all my tasks</Link>
+            </div>
+          </Card>
+
+          {/* Panel 2 - Team Members Status */}
+          <Card className="p-0 overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-200">
+              <h2 className="text-[18px] font-semibold text-gray-900">Team</h2>
+            </div>
+            <div className="p-0 divide-y divide-gray-100">
+              {stats?.teamOverview?.length === 0 ? (
+                <div className="p-5 text-center text-gray-500 text-[14px]">No team members</div>
+              ) : (
+                stats?.teamOverview?.slice(0, 6).map(member => {
+                  let statusColor = 'bg-gray-300'; // offline
+                  if (member.inProgressTasks > 0) statusColor = 'bg-green-500'; // active
+                  // If we had overdue per member, we'd set yellow/red, here we simulate with tasks
+                  if (member.totalTasks > 10) statusColor = 'bg-red-500'; // overloaded
+                  else if (member.totalTasks > 5) statusColor = 'bg-yellow-500'; // busy
+                  
+                  return (
+                    <div key={member._id} className="p-[20px] flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          {member.profileImage ? (
+                            <img src={member.profileImage} alt={member.fullName} className="w-8 h-8 rounded-full object-cover" />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-[12px]">
+                              {member.fullName?.charAt(0) || 'U'}
+                            </div>
+                          )}
+                          <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${statusColor}`}></div>
+                        </div>
+                        <div>
+                          <div className="font-semibold text-[14px] text-gray-900">{member.fullName}</div>
+                          <div className="text-[13px] text-gray-500">{member.totalTasks} tasks</div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          </Card>
+
+          {/* Panel 3 - Upcoming Deadlines */}
+          <Card className="p-0 overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-200">
+              <h2 className="text-[18px] font-semibold text-gray-900">Upcoming Deadlines</h2>
+            </div>
+            <div className="p-0 divide-y divide-gray-100">
+              {stats?.recentTasks?.filter(t => t.dueDate && new Date(t.dueDate) >= new Date()).slice(0, 5).map(task => (
+                <div key={task._id} className="p-[20px] flex gap-4">
+                  <div className="flex flex-col items-center justify-center min-w-[40px] bg-gray-50 border border-gray-200 rounded-lg p-2 text-center h-[48px]">
+                    <span className="text-[10px] font-bold text-gray-500 uppercase leading-none mb-1">
+                      {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short' })}
+                    </span>
+                    <span className="text-[16px] font-bold text-gray-900 leading-none">
+                      {new Date(task.dueDate).getDate()}
+                    </span>
+                  </div>
+                  <div>
+                    <div className="font-semibold text-[14px] text-gray-900 mb-0.5 line-clamp-1">{task.title}</div>
+                    <div className="text-[13px] text-gray-500 flex items-center gap-1.5">
+                      {task.assignedTo?.fullName || 'Unassigned'} · <Badge color={task.priority} className="scale-90 origin-left">{task.priority}</Badge>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {stats?.recentTasks?.filter(t => t.dueDate && new Date(t.dueDate) >= new Date()).length === 0 && (
+                <div className="p-5 text-center text-gray-500 text-[14px]">No upcoming deadlines</div>
+              )}
+            </div>
+          </Card>
+
         </div>
       </div>
     </div>

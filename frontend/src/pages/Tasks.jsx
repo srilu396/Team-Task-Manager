@@ -3,6 +3,7 @@ import { Search } from 'lucide-react';
 import taskService from '../services/task.service';
 import projectService from '../services/project.service';
 import { ToastContext } from '../context/ToastContext';
+import { AuthContext } from '../context/AuthContext';
 import Input from '../components/ui/Input';
 import Badge from '../components/ui/Badge';
 import Avatar from '../components/ui/Avatar';
@@ -13,13 +14,13 @@ const Tasks = () => {
   const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useContext(AuthContext);
   const { showToast } = useContext(ToastContext);
 
   const [filters, setFilters] = useState({
     search: '',
     status: '',
-    priority: '',
-    projectId: ''
+    priority: ''
   });
 
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -43,6 +44,10 @@ const Tasks = () => {
       const cleanFilters = Object.fromEntries(
         Object.entries(filters).filter(([_, v]) => v !== '')
       );
+      // Force fetching only my tasks
+      if (user?.id || user?._id) {
+        cleanFilters.assignedTo = user.id || user._id;
+      }
       const data = await taskService.getTasks(cleanFilters);
       setTasks(data);
     } catch (error) {
@@ -70,7 +75,15 @@ const Tasks = () => {
     setIsTaskModalOpen(true);
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (task) => {
+    const status = task.status;
+    const proj = projects.find(p => p._id === task.project?._id) || task.project;
+    if (proj?.customStatuses && proj.customStatuses.length > 0) {
+      const match = proj.customStatuses.find(s => s.name.toLowerCase().replace(' ', '_') === status.toLowerCase().replace(' ', '_'));
+      if (match) {
+        return <Badge color={match.color}>{match.name}</Badge>;
+      }
+    }
     const colors = {
       todo: 'gray',
       in_progress: 'blue',
@@ -83,14 +96,14 @@ const Tasks = () => {
       review: 'Review',
       done: 'Done'
     };
-    return <Badge color={colors[status]}>{labels[status]}</Badge>;
+    return <Badge color={colors[status] || 'gray'}>{labels[status] || status}</Badge>;
   };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">All Tasks</h1>
+          <h1 className="text-2xl font-bold text-gray-900">My Tasks</h1>
           <p className="text-gray-500 mt-1">View and filter across all projects</p>
         </div>
       </div>
@@ -109,17 +122,7 @@ const Tasks = () => {
           />
         </div>
         
-        <select
-          name="projectId"
-          value={filters.projectId}
-          onChange={handleFilterChange}
-          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white min-w-[150px]"
-        >
-          <option value="">All Projects</option>
-          {projects.map(p => (
-            <option key={p._id} value={p._id}>{p.name}</option>
-          ))}
-        </select>
+
         
         <select
           name="status"
@@ -203,7 +206,7 @@ const Tasks = () => {
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      {getStatusBadge(task.status)}
+                      {getStatusBadge(task)}
                     </td>
                     <td className="px-6 py-4">
                       <Badge color={

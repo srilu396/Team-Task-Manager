@@ -27,24 +27,34 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     const data = await authService.login(email, password);
     localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify({ id: data.user.id, name: data.user.fullName, email: data.user.email, role: data.user.role }));
     setUser(data.user);
     return data;
   };
 
-  const signup = async (fullName, email, password) => {
-    const data = await authService.signup(fullName, email, password);
+  const signup = async (fullName, email, password, role) => {
+    const data = await authService.signup(fullName, email, password, role);
     localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify({ id: data.user.id, name: data.user.fullName, email: data.user.email, role: data.user.role }));
     setUser(data.user);
     return data;
   };
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setUser(null);
   };
 
+  const updateUser = (updatedUser) => {
+    setUser(updatedUser);
+  };
+
+  const isAdmin = user?.role === 'admin';
+  const isMember = user?.role === 'member';
+
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, loading }}>
+    <AuthContext.Provider value={{ user, isAdmin, isMember, login, signup, logout, loading, updateUser }}>
       {!loading && children}
     </AuthContext.Provider>
   );

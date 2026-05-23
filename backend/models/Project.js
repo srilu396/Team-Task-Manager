@@ -9,6 +9,12 @@ const projectSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     role: { type: String, enum: ['admin','member'], default: 'member' }
   }],
+  customStatuses: [{
+    name: { type: String, required: true },
+    color: { type: String, required: true },
+    bg: { type: String, required: true },
+    order: { type: Number, default: 0 }
+  }],
   createdAt: { type: Date, default: Date.now }
 });
 

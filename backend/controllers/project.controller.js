@@ -6,11 +6,19 @@ exports.getProjects = async (req, res) => {
   try {
     let projects;
     if (req.user.role === 'admin') {
-      projects = await Project.find().populate('owner', 'fullName email').populate('members.user', 'fullName email');
+      projects = await Project.find({ owner: req.user.id }).populate('owner', 'fullName email').populate('members.user', 'fullName email').lean();
     } else {
-      projects = await Project.find({ 'members.user': req.user.id }).populate('owner', 'fullName email').populate('members.user', 'fullName email');
+      projects = await Project.find({ 'members.user': req.user.id }).populate('owner', 'fullName email').populate('members.user', 'fullName email').lean();
     }
-    res.json(projects);
+    
+    // Add task counts
+    const projectsWithTasks = await Promise.all(projects.map(async (project) => {
+      const totalTasks = await Task.countDocuments({ project: project._id });
+      const completedTasks = await Task.countDocuments({ project: project._id, status: 'done' });
+      return { ...project, totalTasks, completedTasks };
+    }));
+    
+    res.json(projectsWithTasks);
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
@@ -61,11 +69,11 @@ exports.getProjectById = async (req, res) => {
 
 exports.updateProject = async (req, res) => {
   try {
-    const { name, description, status } = req.body;
+    const { name, description, status, customStatuses } = req.body;
 
     const project = await Project.findByIdAndUpdate(
       req.params.id,
-      { name, description, status },
+      { name, description, status, customStatuses },
       { new: true }
     );
 
@@ -127,6 +135,43 @@ exports.removeMember = async (req, res) => {
 
     project.members = project.members.filter(member => member.user.toString() !== req.params.userId);
     await project.save();
+
+    res.json(project);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+exports.addMembersBulk = async (req, res) => {
+  try {
+    const { userIds } = req.body;
+    const project = await Project.findById(req.params.id);
+
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    const { sendNotification } = require('../utils/notification.helper');
+
+    const addedUsers = [];
+    for (let userId of userIds) {
+      if (!project.members.some(member => member.user.toString() === userId)) {
+        project.members.push({ user: userId, role: 'member' });
+        addedUsers.push(userId);
+      }
+    }
+
+    if (addedUsers.length > 0) {
+      await project.save();
+      
+      // Dispatch real-time notifications to added members
+      for (let userId of addedUsers) {
+        await sendNotification(
+          req.app,
+          userId,
+          `You have been added to project: "${project.name}"`,
+          null
+        );
+      }
+    }
 
     res.json(project);
   } catch (err) {

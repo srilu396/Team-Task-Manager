@@ -5,8 +5,8 @@ const authService = {
     const response = await api.post('/auth/login', { email, password });
     return response.data;
   },
-  signup: async (fullName, email, password) => {
-    const response = await api.post('/auth/signup', { fullName, email, password });
+  signup: async (fullName, email, password, role) => {
+    const response = await api.post('/auth/signup', { fullName, email, password, role });
     return response.data;
   },
   getMe: async () => {

@@ -6,6 +6,7 @@ import { AuthContext } from '../context/AuthContext';
 import { ToastContext } from '../context/ToastContext';
 import KanbanBoard from '../components/tasks/KanbanBoard';
 import TaskModal from '../components/tasks/TaskModal';
+import CustomStatusManager from '../components/tasks/CustomStatusManager';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import Avatar from '../components/ui/Avatar';
@@ -28,6 +29,8 @@ const ProjectDetail = () => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [isNewTask, setIsNewTask] = useState(false);
   const [initialTaskStatus, setInitialTaskStatus] = useState('todo');
+  
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [addingMember, setAddingMember] = useState(false);
@@ -153,21 +156,20 @@ const ProjectDetail = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <button 
-            onClick={() => navigate('/projects')}
-            className="flex items-center text-sm text-gray-500 hover:text-gray-900 mb-2 transition-colors"
-          >
-            <ArrowLeft size={16} className="mr-1" /> Back to Projects
-          </button>
+          <div className="flex items-center gap-2 text-[13px] font-medium text-gray-500 mb-2">
+            <span className="hover:text-blue-600 cursor-pointer transition-colors" onClick={() => navigate('/projects')}>Projects</span>
+            <span className="text-gray-300">/</span>
+            <span className="text-gray-900">{project.name}</span>
+          </div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-gray-900">{project.name}</h1>
+            <h1 className="text-[24px] font-bold text-gray-900">{project.name}</h1>
             <Badge color={project.status === 'active' ? 'green' : project.status === 'completed' ? 'blue' : 'gray'}>
               {project.status}
             </Badge>
           </div>
         </div>
         
-        {activeTab === 'board' && (
+        {activeTab === 'board' && isAdmin && (
           <Button onClick={() => handleAddTask()}>
             <Plus size={20} />
             <span>Add Task</span>
@@ -185,14 +187,16 @@ const ProjectDetail = () => {
         >
           Board
         </button>
-        <button
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-            activeTab === 'members' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
-          onClick={() => setActiveTab('members')}
-        >
-          Members
-        </button>
+        {isAdmin && (
+          <button
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'members' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+            onClick={() => setActiveTab('members')}
+          >
+            Members
+          </button>
+        )}
         {isAdmin && (
           <button
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
@@ -304,6 +308,16 @@ const ProjectDetail = () => {
                   <Button type="submit">Save Changes</Button>
                 </div>
               </form>
+
+              <div className="pt-6 border-t border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Task Workflow</h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  Configure custom task statuses and colors for this project's board and tasks.
+                </p>
+                <Button type="button" onClick={() => setIsStatusModalOpen(true)}>
+                  Manage Statuses
+                </Button>
+              </div>
               
               <div className="pt-6 border-t border-gray-200">
                 <h3 className="text-lg font-medium text-red-600 mb-2">Danger Zone</h3>
@@ -328,6 +342,14 @@ const ProjectDetail = () => {
         isNew={isNewTask}
         initialStatus={initialTaskStatus}
         onTaskUpdated={fetchProjectData}
+      />
+
+      <CustomStatusManager
+        isOpen={isStatusModalOpen}
+        onClose={() => setIsStatusModalOpen(false)}
+        project={project}
+        onStatusesUpdated={fetchProjectData}
+        showToast={showToast}
       />
     </div>
   );

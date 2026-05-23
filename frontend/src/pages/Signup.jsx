@@ -78,7 +78,8 @@ const Signup = () => {
     fullName: '', 
     email: '', 
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    role: 'Member'
   });
   const [loading, setLoading] = useState(false);
   
@@ -123,8 +124,12 @@ const Signup = () => {
     }
     setLoading(true);
     try {
-      await signup(formData.fullName, formData.email, formData.password);
-      navigate('/login');
+      const data = await signup(formData.fullName, formData.email, formData.password, formData.role);
+      if (data.user.role === 'admin') {
+        navigate('/dashboard');
+      } else {
+        navigate('/my-tasks');
+      }
     } catch (error) {
       showToast(error.response?.data?.message || 'Signup failed', 'error');
     } finally {
@@ -209,6 +214,25 @@ const Signup = () => {
         {/* Right Side - Form */}
         <div className="w-full lg:w-7/12 p-6 lg:p-10 flex flex-col justify-center">
           <div className="max-w-[360px] mx-auto w-full">
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px',
+              marginBottom: '32px'
+            }}>
+              <img src="/logo.svg" alt="TaskNova"
+                style={{ width: '48px', height: '48px' }}
+              />
+              <span style={{
+                fontSize: '28px',
+                fontWeight: '800',
+                color: '#4F46E5'
+              }}>
+                Task<span style={{ color: '#7C3AED' }}>Nova</span>
+              </span>
+            </div>
+            
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-gray-800 mb-1">Create workspace</h2>
             </div>
@@ -287,13 +311,31 @@ const Signup = () => {
                 )}
               </div>
 
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Role</label>
+                <div className="relative">
+                  <select
+                    name="role"
+                    value={formData.role}
+                    onChange={handleChange}
+                    className="w-full border border-gray-200 rounded-lg py-2.5 px-3.5 text-gray-700 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-gray-50 focus:bg-white appearance-none cursor-pointer"
+                  >
+                    <option value="Admin">Admin</option>
+                    <option value="Member">Member</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
+                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                  </div>
+                </div>
+              </div>
+
               <div className="pt-2">
                 <button 
                   type="submit" 
                   className={`w-full py-3 rounded-lg font-bold transition-all text-white text-sm shadow-md ${formData.email && formData.password && formData.fullName && formData.password === formData.confirmPassword ? 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 hover:shadow-lg hover:shadow-indigo-200 transform hover:-translate-y-0.5' : 'bg-gray-300 text-gray-500 shadow-none'}`} 
                   disabled={loading || (formData.password !== formData.confirmPassword)}
                 >
-                  {loading ? 'Creating account...' : 'Sign Up'}
+                  {loading ? 'Creating account...' : 'Create Account'}
                 </button>
               </div>
             </form>

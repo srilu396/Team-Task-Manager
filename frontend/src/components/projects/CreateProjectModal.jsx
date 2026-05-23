@@ -10,7 +10,8 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    description: ''
+    description: '',
+    status: 'active'
   });
 
   const handleChange = (e) => {
@@ -56,6 +57,20 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
             placeholder="Brief description of the project..."
             className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
           />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-gray-700">Status</label>
+          <select
+            name="status"
+            value={formData.status}
+            onChange={handleChange}
+            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white"
+          >
+            <option value="active">Active</option>
+            <option value="completed">Completed</option>
+            <option value="archived">Archived</option>
+          </select>
         </div>
         
         <div className="flex justify-end gap-3 mt-6">

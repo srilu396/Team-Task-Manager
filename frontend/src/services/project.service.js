@@ -25,6 +25,10 @@ const projectService = {
     const response = await api.post(`/projects/${projectId}/members`, { email });
     return response.data;
   },
+  addMembersBulk: async (projectId, userIds) => {
+    const response = await api.post(`/projects/${projectId}/members/bulk`, { userIds });
+    return response.data;
+  },
   removeMember: async (projectId, userId) => {
     const response = await api.delete(`/projects/${projectId}/members/${userId}`);
     return response.data;

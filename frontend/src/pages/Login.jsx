@@ -113,8 +113,12 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await login(formData.email, formData.password);
-      navigate('/dashboard');
+      const data = await login(formData.email, formData.password);
+      if (data.user.role === 'admin') {
+        navigate('/dashboard');
+      } else {
+        navigate('/my-tasks');
+      }
     } catch (error) {
       showToast(error.response?.data?.message || 'Login failed', 'error');
     } finally {
@@ -199,6 +203,25 @@ const Login = () => {
         {/* Right Side - Form */}
         <div className="w-full lg:w-7/12 p-6 lg:p-10 flex flex-col justify-center">
           <div className="max-w-[360px] mx-auto w-full">
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px',
+              marginBottom: '32px'
+            }}>
+              <img src="/logo.svg" alt="TaskNova"
+                style={{ width: '48px', height: '48px' }}
+              />
+              <span style={{
+                fontSize: '28px',
+                fontWeight: '800',
+                color: '#4F46E5'
+              }}>
+                Task<span style={{ color: '#7C3AED' }}>Nova</span>
+              </span>
+            </div>
+            
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-gray-800 mb-1">Welcome back</h2>
               <p className="text-gray-500 text-sm">Please enter your details to sign in.</p>
@@ -255,7 +278,7 @@ const Login = () => {
             </form>
 
             <div className="mt-6 text-center text-sm text-gray-600 font-medium">
-              Don't have an account? <Link to="/signup" className="text-indigo-600 hover:underline font-bold ml-1">Sign up</Link>
+              Don't have an account? <Link to="/signup" className="text-indigo-600 hover:underline font-bold ml-1">Sign Up</Link>
             </div>
           </div>
         </div>

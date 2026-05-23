@@ -12,6 +12,7 @@ router.get('/:id', projectController.getProjectById);
 router.put('/:id', role('admin'), projectController.updateProject);
 router.delete('/:id', role('admin'), projectController.deleteProject);
 router.post('/:id/members', role('admin'), projectController.addMember);
+router.post('/:id/members/bulk', role('admin'), projectController.addMembersBulk);
 router.delete('/:id/members/:userId', role('admin'), projectController.removeMember);
 
 module.exports = router;
