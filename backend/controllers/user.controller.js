@@ -66,10 +66,9 @@ exports.uploadAvatar = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    const avatarPath = `/uploads/avatars/${req.file.filename}`;
-    user.avatar = avatarPath;
-    // Keep profileImage in sync too just in case
-    user.profileImage = avatarPath;
+    const base64Image = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+    user.avatar = base64Image;
+    user.profileImage = base64Image;
     await user.save();
     res.json({ user });
   } catch (err) {

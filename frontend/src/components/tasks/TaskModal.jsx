@@ -219,7 +219,7 @@ const TaskModal = ({ isOpen, onClose, task, project, onTaskUpdated, isNew = fals
         
         {/* Right column: Comments (only if not new) */}
         {!isNew && (
-          <div className="w-full md:w-2/5 flex flex-col border-l pl-6 border-gray-200/60 min-h-[400px]">
+          <div className="w-full md:w-2/5 flex flex-col border-l pl-6 border-gray-200/60">
             <h4 className="font-semibold text-gray-900 mb-4 text-[15px] flex items-center gap-2">
               Comments 
               <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs font-bold">
@@ -227,7 +227,7 @@ const TaskModal = ({ isOpen, onClose, task, project, onTaskUpdated, isNew = fals
               </span>
             </h4>
             
-            <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-1 max-h-[45vh] scrollbar-thin">
+            <div className="overflow-y-auto space-y-4 mb-4 pr-1 h-[260px] scroll-smooth scrollbar-none">
               {comments.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-center">
                   <p className="text-sm text-gray-400 italic">No comments yet. Start the conversation!</p>
