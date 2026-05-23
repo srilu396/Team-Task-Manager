@@ -6,32 +6,34 @@ exports.getStats = async (req, res) => {
     const isAdmin = req.user.role === 'admin';
 
     if (isAdmin) {
-      const totalProjects = await Project.countDocuments();
-      const allProjects = await Project.find().populate('members.user', 'fullName').lean();
+      const totalProjects = await Project.countDocuments({ owner: req.user.id });
+      const allProjects = await Project.find({ owner: req.user.id }).populate('members.user', 'fullName').lean();
       
       // Calculate unique members across all projects
       const uniqueMembers = new Set();
       allProjects.forEach(p => p.members.forEach(m => uniqueMembers.add(m.user?._id?.toString())));
       const totalMembers = uniqueMembers.size;
 
-      const totalTasks = await Task.countDocuments();
-      const completedTasks = await Task.countDocuments({ status: 'done' });
-      const overdueTasks = await Task.countDocuments({ status: { $ne: 'done' }, dueDate: { $lt: new Date() } });
+      const projectIds = allProjects.map(p => p._id);
+
+      const totalTasks = await Task.countDocuments({ project: { $in: projectIds } });
+      const completedTasks = await Task.countDocuments({ project: { $in: projectIds }, status: 'done' });
+      const overdueTasks = await Task.countDocuments({ project: { $in: projectIds }, status: { $ne: 'done' }, dueDate: { $lt: new Date() } });
 
       const tasksByStatus = {
-        todo: await Task.countDocuments({ status: 'todo' }),
-        in_progress: await Task.countDocuments({ status: 'in_progress' }),
-        review: await Task.countDocuments({ status: 'review' }),
+        todo: await Task.countDocuments({ project: { $in: projectIds }, status: 'todo' }),
+        in_progress: await Task.countDocuments({ project: { $in: projectIds }, status: 'in_progress' }),
+        review: await Task.countDocuments({ project: { $in: projectIds }, status: 'review' }),
         done: completedTasks
       };
 
       const tasksByPriority = {
-        low: await Task.countDocuments({ priority: 'low' }),
-        medium: await Task.countDocuments({ priority: 'medium' }),
-        high: await Task.countDocuments({ priority: 'high' })
+        low: await Task.countDocuments({ project: { $in: projectIds }, priority: 'low' }),
+        medium: await Task.countDocuments({ project: { $in: projectIds }, priority: 'medium' }),
+        high: await Task.countDocuments({ project: { $in: projectIds }, priority: 'high' })
       };
 
-      const recentTasks = await Task.find()
+      const recentTasks = await Task.find({ project: { $in: projectIds } })
         .populate('project', 'name')
         .populate('createdBy', 'fullName email')
         .sort({ createdAt: -1 })
@@ -45,7 +47,7 @@ exports.getStats = async (req, res) => {
         createdAt: task.createdAt
       }));
 
-      const overdueTasksList = await Task.find({ status: { $ne: 'done' }, dueDate: { $lt: new Date() } })
+      const overdueTasksList = await Task.find({ project: { $in: projectIds }, status: { $ne: 'done' }, dueDate: { $lt: new Date() } })
         .populate('project', 'name')
         .populate('assignedTo', 'fullName email')
         .sort({ dueDate: 1 });
@@ -61,7 +63,11 @@ exports.getStats = async (req, res) => {
       }));
 
       // Calculate team overview
-      const allUsers = await require('../models/User').find().select('fullName email profileImage').lean();
+      const userQuery = { role: { $ne: 'admin' } };
+      if (req.user.teamCode) {
+        userQuery.teamCode = req.user.teamCode;
+      }
+      const allUsers = await require('../models/User').find(userQuery).select('fullName email profileImage').lean();
       const teamOverview = await Promise.all(allUsers.map(async (u) => {
         const uTasks = await Task.countDocuments({ assignedTo: u._id });
         const uCompleted = await Task.countDocuments({ assignedTo: u._id, status: 'done' });

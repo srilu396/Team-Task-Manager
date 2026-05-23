@@ -242,10 +242,7 @@ const Login = () => {
               </div>
               
               <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="block text-sm font-semibold text-gray-700">Password</label>
-                  <a href="#" className="text-xs font-medium text-indigo-600 hover:underline">Forgot password?</a>
-                </div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Password</label>
                 <div className="relative">
                   <input 
                     type={showPassword ? "text" : "password"} 

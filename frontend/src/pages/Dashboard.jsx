@@ -78,6 +78,31 @@ const Dashboard = () => {
 
   return (
     <div className="p-[24px] space-y-[24px] max-w-[1400px] mx-auto pb-10">
+      {/* TEAM CODE ONBOARDING BANNER FOR ADMINS */}
+      {user?.role === 'admin' && user?.teamCode && totalMembers === 0 && (
+        <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 rounded-xl p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-sm">
+          <div>
+            <h3 className="font-bold text-indigo-900 text-[16px] mb-1">Onboard your team to TaskNova! 🚀</h3>
+            <p className="text-[13px] text-indigo-700 leading-relaxed max-w-2xl">
+              Share your unique Team Code with your members. They will enter it when registering their account to automatically join your workspace and appear on your dashboard.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 bg-white border border-indigo-100 px-4 py-2 rounded-lg shadow-sm shrink-0">
+            <span className="text-[11px] font-bold text-indigo-400 uppercase tracking-wider">Your Code:</span>
+            <span className="font-extrabold text-[14px] text-indigo-900 tracking-wide font-mono">{user.teamCode}</span>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(user.teamCode);
+                showToast('Team code copied to clipboard!', 'success');
+              }}
+              className="text-indigo-600 hover:text-indigo-800 font-bold text-[12px] ml-1 bg-indigo-50/50 px-2 py-1 rounded hover:bg-indigo-100 transition-colors"
+            >
+              Copy
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* OVERDUE ALERT BANNER */}
       {overdueTasksCount > 0 && !dismissOverdue && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex justify-between items-center text-red-800">

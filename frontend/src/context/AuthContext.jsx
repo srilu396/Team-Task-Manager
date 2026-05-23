@@ -33,14 +33,15 @@ export const AuthProvider = ({ children }) => {
       email: data.user.email, 
       role: data.user.role,
       profileImage: data.user.profileImage,
-      avatar: data.user.avatar
+      avatar: data.user.avatar,
+      teamCode: data.user.teamCode
     }));
     setUser(data.user);
     return data;
   };
 
-  const signup = async (fullName, email, password, role) => {
-    const data = await authService.signup(fullName, email, password, role);
+  const signup = async (fullName, email, password, role, teamCode) => {
+    const data = await authService.signup(fullName, email, password, role, teamCode);
     localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify({ 
       id: data.user.id, 
@@ -48,7 +49,8 @@ export const AuthProvider = ({ children }) => {
       email: data.user.email, 
       role: data.user.role,
       profileImage: data.user.profileImage,
-      avatar: data.user.avatar
+      avatar: data.user.avatar,
+      teamCode: data.user.teamCode
     }));
     setUser(data.user);
     return data;
@@ -68,7 +70,8 @@ export const AuthProvider = ({ children }) => {
       email: updatedUser.email,
       role: updatedUser.role,
       profileImage: updatedUser.profileImage,
-      avatar: updatedUser.avatar
+      avatar: updatedUser.avatar,
+      teamCode: updatedUser.teamCode
     }));
   };
 

@@ -1,10 +1,19 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, FolderKanban, CheckSquare, Users, X } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, CheckSquare, Users, X, Copy, Check } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const { user, isAdmin, logout } = useContext(AuthContext);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyCode = () => {
+    if (user?.teamCode) {
+      navigator.clipboard.writeText(user.teamCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   let navItems = [];
   if (isAdmin) {
@@ -96,7 +105,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           </nav>
 
           {/* Bottom Area */}
-          <div className="px-4 mt-auto pt-4 border-t border-gray-200">
+          <div className="px-4 mt-auto pt-4 border-t border-gray-200 space-y-3">
              {user && (
                <div className="flex items-center gap-3 px-3.5 py-3 rounded-xl bg-white border border-gray-200/80 shadow-sm transition-all duration-200 hover:shadow-md hover:border-indigo-100">
                  {user.profileImage || user.avatar ? (
@@ -120,6 +129,22 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                      {user.role}
                    </span>
                  </div>
+               </div>
+             )}
+
+             {user && isAdmin && user.teamCode && (
+               <div className="px-3.5 py-2.5 rounded-xl bg-indigo-50/50 border border-indigo-100/85 flex items-center justify-between gap-2 shadow-sm">
+                 <div className="flex-1 min-w-0">
+                   <p className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">Team Code</p>
+                   <p className="text-[13px] font-extrabold text-indigo-900 tracking-wide font-mono mt-0.5">{user.teamCode}</p>
+                 </div>
+                 <button
+                   onClick={handleCopyCode}
+                   className="p-1.5 rounded-lg hover:bg-indigo-100/80 text-indigo-600 transition-colors shrink-0"
+                   title="Copy team code"
+                 >
+                   {copied ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
+                 </button>
                </div>
              )}
           </div>

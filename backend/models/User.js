@@ -7,7 +7,9 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: ['admin','member'], default: 'member' },
   profileImage: { type: String, default: '' },
   avatar: { type: String, default: null },
+  teamCode: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now }
 });
 
 module.exports = mongoose.model('User', userSchema);
+

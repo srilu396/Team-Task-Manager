@@ -111,7 +111,11 @@ exports.addMember = async (req, res) => {
 
     if (!project) return res.status(404).json({ message: 'Project not found' });
 
-    const userToAdd = await User.findOne({ email });
+    const userQuery = { email };
+    if (req.user.teamCode) {
+      userQuery.teamCode = req.user.teamCode;
+    }
+    const userToAdd = await User.findOne(userQuery);
     if (!userToAdd) return res.status(404).json({ message: 'User not found' });
 
     if (project.members.some(member => member.user.toString() === userToAdd.id)) {

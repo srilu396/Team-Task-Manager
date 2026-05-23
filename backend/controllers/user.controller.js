@@ -3,10 +3,14 @@ const Task = require('../models/Task');
 
 exports.getUsers = async (req, res) => {
   try {
-    const users = await User.find({
+    const query = {
       role: { $ne: 'admin' },
       _id: { $ne: req.user.id }
-    }).select('-password').lean();
+    };
+    if (req.user.teamCode) {
+      query.teamCode = req.user.teamCode;
+    }
+    const users = await User.find(query).select('-password').lean();
     
     const usersWithTaskCount = await Promise.all(users.map(async (user) => {
       const assignedTasksCount = await Task.countDocuments({ assignedTo: user._id });

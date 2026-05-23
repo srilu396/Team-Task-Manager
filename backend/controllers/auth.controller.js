@@ -2,13 +2,49 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+const generateUniqueTeamCode = async () => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  let isUnique = false;
+  
+  while (!isUnique) {
+    let randomPart = '';
+    for (let i = 0; i < 6; i++) {
+      randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    code = `TEAM-${randomPart}`;
+    
+    const existing = await User.findOne({ teamCode: code });
+    if (!existing) {
+      isUnique = true;
+    }
+  }
+  return code;
+};
+
 exports.signup = async (req, res) => {
   try {
-    const { fullName, email, password, role } = req.body;
+    const { fullName, email, password, role, teamCode } = req.body;
 
     let user = await User.findOne({ email });
     if (user) {
       return res.status(400).json({ message: 'User already exists' });
+    }
+
+    const normalizedRole = role ? role.toLowerCase() : 'member';
+    let assignedTeamCode = '';
+
+    if (normalizedRole === 'admin') {
+      assignedTeamCode = await generateUniqueTeamCode();
+    } else {
+      if (!teamCode) {
+        return res.status(400).json({ message: 'Team code is required for members' });
+      }
+      const adminUser = await User.findOne({ role: 'admin', teamCode: teamCode.toUpperCase().trim() });
+      if (!adminUser) {
+        return res.status(400).json({ message: 'Invalid Team Code. Please contact your administrator.' });
+      }
+      assignedTeamCode = teamCode.toUpperCase().trim();
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -18,7 +54,8 @@ exports.signup = async (req, res) => {
       fullName,
       email,
       password: hashedPassword,
-      role: role ? role.toLowerCase() : 'member'
+      role: normalizedRole,
+      teamCode: assignedTeamCode
     });
 
     await user.save();
@@ -34,7 +71,8 @@ exports.signup = async (req, res) => {
         email: user.email, 
         role: user.role,
         profileImage: user.profileImage,
-        avatar: user.avatar
+        avatar: user.avatar,
+        teamCode: user.teamCode
       } 
     });
   } catch (err) {
@@ -67,7 +105,8 @@ exports.login = async (req, res) => {
         email: user.email, 
         role: user.role,
         profileImage: user.profileImage,
-        avatar: user.avatar
+        avatar: user.avatar,
+        teamCode: user.teamCode
       } 
     });
   } catch (err) {
@@ -83,3 +122,4 @@ exports.getMe = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+

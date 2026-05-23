@@ -78,8 +78,8 @@ const Signup = () => {
     fullName: '', 
     email: '', 
     password: '',
-    confirmPassword: '',
-    role: 'Member'
+    role: 'Admin',
+    teamCode: ''
   });
   const [loading, setLoading] = useState(false);
   
@@ -87,7 +87,6 @@ const Signup = () => {
   const [isTransitioning, setIsTransitioning] = useState(true);
   
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const { signup } = useContext(AuthContext);
   const { showToast } = useContext(ToastContext);
@@ -118,13 +117,9 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      showToast('Passwords do not match', 'error');
-      return;
-    }
     setLoading(true);
     try {
-      const data = await signup(formData.fullName, formData.email, formData.password, formData.role);
+      const data = await signup(formData.fullName, formData.email, formData.password, formData.role, formData.teamCode);
       if (data.user.role === 'admin') {
         navigate('/dashboard');
       } else {
@@ -286,30 +281,7 @@ const Signup = () => {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Confirm Password</label>
-                <div className="relative">
-                  <input 
-                    type={showConfirmPassword ? "text" : "password"} 
-                    name="confirmPassword" 
-                    value={formData.confirmPassword} 
-                    onChange={handleChange} 
-                    required 
-                    placeholder="Confirm Password" 
-                    className={`w-full border ${formData.confirmPassword && formData.password !== formData.confirmPassword ? 'border-red-400 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-indigo-500 focus:ring-indigo-500'} rounded-lg py-2.5 pl-3.5 pr-10 text-gray-700 text-sm focus:outline-none focus:ring-1 placeholder-gray-400 transition-all bg-gray-50 focus:bg-white`} 
-                  />
-                  <button 
-                    type="button" 
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
-                  >
-                    {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
-                  </button>
-                </div>
-                {formData.confirmPassword && formData.password !== formData.confirmPassword && (
-                  <p className="text-red-500 text-xs mt-1">Passwords do not match.</p>
-                )}
-              </div>
+
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Role</label>
@@ -329,11 +301,27 @@ const Signup = () => {
                 </div>
               </div>
 
+              {formData.role === 'Member' && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Team Code</label>
+                  <input 
+                    type="text" 
+                    name="teamCode" 
+                    value={formData.teamCode} 
+                    onChange={handleChange} 
+                    required 
+                    placeholder="e.g. TEAM-ABC123" 
+                    className="w-full border border-gray-200 rounded-lg py-2.5 px-3.5 text-gray-700 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 placeholder-gray-400 transition-all bg-gray-50 focus:bg-white" 
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Enter the code shared by your Admin to join their team.</p>
+                </div>
+              )}
+
               <div className="pt-2">
                 <button 
                   type="submit" 
-                  className={`w-full py-3 rounded-lg font-bold transition-all text-white text-sm shadow-md ${formData.email && formData.password && formData.fullName && formData.password === formData.confirmPassword ? 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 hover:shadow-lg hover:shadow-indigo-200 transform hover:-translate-y-0.5' : 'bg-gray-300 text-gray-500 shadow-none'}`} 
-                  disabled={loading || (formData.password !== formData.confirmPassword)}
+                  className={`w-full py-3 rounded-lg font-bold transition-all text-white text-sm shadow-md ${formData.email && formData.password && formData.fullName && (formData.role !== 'Member' || formData.teamCode) ? 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 hover:shadow-lg hover:shadow-indigo-200 transform hover:-translate-y-0.5' : 'bg-gray-300 text-gray-500 shadow-none'}`} 
+                  disabled={loading || (formData.role === 'Member' && !formData.teamCode)}
                 >
                   {loading ? 'Creating account...' : 'Create Account'}
                 </button>

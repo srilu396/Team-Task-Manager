@@ -25,21 +25,24 @@ const seedDB = async () => {
       fullName: 'Admin User',
       email: 'admin@test.com',
       password: passwordHash,
-      role: 'admin'
+      role: 'admin',
+      teamCode: 'TEAM-ABC123'
     });
 
     const memberJohn = await User.create({
       fullName: 'John Member',
       email: 'member@test.com',
       password: passwordHash,
-      role: 'member'
+      role: 'member',
+      teamCode: 'TEAM-ABC123'
     });
 
     const memberSarah = await User.create({
       fullName: 'Sarah Dev',
       email: 'sarah@test.com',
       password: passwordHash,
-      role: 'member'
+      role: 'member',
+      teamCode: 'TEAM-ABC123'
     });
 
     console.log('Creating projects...');
