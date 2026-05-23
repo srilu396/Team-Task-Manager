@@ -120,11 +120,11 @@ const TaskModal = ({ isOpen, onClose, task, project, onTaskUpdated, isNew = fals
       isOpen={isOpen} 
       onClose={onClose} 
       title={isNew ? 'Create New Task' : 'Task Details'}
-      maxWidth="max-w-2xl"
+      maxWidth={isNew ? 'max-w-xl' : 'max-w-4xl'}
     >
-      <div className="flex flex-col md:flex-row gap-6 max-h-[70vh] overflow-y-auto pr-2">
+      <div className="flex flex-col md:flex-row gap-8 max-h-[75vh] overflow-y-auto pr-2">
         {/* Left column: Form */}
-        <div className="flex-1 space-y-4">
+        <div className={`w-full ${isNew ? '' : 'md:w-3/5 pr-2'} space-y-5`}>
           <form id="task-form" onSubmit={handleSubmit} className="space-y-4">
             <Input
               label="Title"
@@ -219,38 +219,52 @@ const TaskModal = ({ isOpen, onClose, task, project, onTaskUpdated, isNew = fals
         
         {/* Right column: Comments (only if not new) */}
         {!isNew && (
-          <div className="w-full md:w-1/3 flex flex-col border-l pl-4 border-gray-200">
-            <h4 className="font-medium text-gray-900 mb-4">Comments</h4>
+          <div className="w-full md:w-2/5 flex flex-col border-l pl-6 border-gray-200/60 min-h-[400px]">
+            <h4 className="font-semibold text-gray-900 mb-4 text-[15px] flex items-center gap-2">
+              Comments 
+              <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs font-bold">
+                {comments.length}
+              </span>
+            </h4>
             
-            <div className="flex-1 overflow-y-auto space-y-4 mb-4">
+            <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-1 max-h-[45vh] scrollbar-thin">
               {comments.length === 0 ? (
-                <p className="text-sm text-gray-500 italic">No comments yet.</p>
+                <div className="flex flex-col items-center justify-center py-10 text-center">
+                  <p className="text-sm text-gray-400 italic">No comments yet. Start the conversation!</p>
+                </div>
               ) : (
                 comments.map(comment => (
-                  <div key={comment._id} className="bg-gray-50 p-3 rounded-lg text-sm">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Avatar name={comment.user.fullName} size="sm" />
-                      <span className="font-medium text-gray-900">{comment.user.fullName}</span>
-                      <span className="text-xs text-gray-500">
-                        {new Date(comment.createdAt).toLocaleDateString()}
-                      </span>
+                  <div key={comment._id} className="bg-gray-50/70 hover:bg-gray-50 p-4 rounded-xl text-sm border border-gray-100/50 shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-2.5 mb-1.5">
+                      <Avatar 
+                        name={comment.user.fullName} 
+                        src={comment.user.profileImage || comment.user.avatar} 
+                        size="sm" 
+                        className="border border-white shadow-sm"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <span className="font-bold text-gray-800 text-[13px] block truncate">{comment.user.fullName}</span>
+                        <span className="text-[10px] text-gray-400 font-semibold block mt-0.5">
+                          {new Date(comment.createdAt).toLocaleDateString()} · {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
                     </div>
-                    <p className="text-gray-700 mt-2">{comment.content}</p>
+                    <p className="text-gray-600 mt-2 text-[13px] leading-relaxed whitespace-pre-wrap pl-0.5">{comment.content}</p>
                   </div>
                 ))
               )}
             </div>
             
-            <form onSubmit={handleAddComment} className="mt-auto flex flex-col gap-2">
+            <form onSubmit={handleAddComment} className="mt-auto pt-4 border-t border-gray-100 flex flex-col gap-2.5">
               <textarea
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Add a comment..."
+                placeholder="Write a comment or reply..."
                 rows="2"
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                className="w-full px-3.5 py-2.5 text-[13px] border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none placeholder-gray-400 bg-gray-50/50 hover:bg-gray-50 focus:bg-white"
               />
-              <Button type="submit" variant="secondary" className="self-end py-1 px-3 text-sm" disabled={!newComment.trim()}>
-                Post
+              <Button type="submit" variant="primary" className="self-end py-1.5 px-4 text-xs font-bold shadow-sm rounded-lg" disabled={!newComment.trim()}>
+                Post Comment
               </Button>
             </form>
           </div>

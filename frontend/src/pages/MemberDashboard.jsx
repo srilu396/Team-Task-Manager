@@ -328,7 +328,7 @@ const MemberDashboardContent = ({ stats, user, fetchStats }) => {
                                     </span>
                                   )}
                                   <span className="flex items-center gap-1">
-                                    <MessageSquare className="w-3.5 h-3.5" /> {task.comments?.length || 0}
+                                    <MessageSquare className="w-3.5 h-3.5" /> {task.comments?.length || task.commentsCount || 0}
                                   </span>
                                 </div>
                               </div>

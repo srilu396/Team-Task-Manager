@@ -17,7 +17,7 @@ const TeamOverview = ({ members }) => {
           return (
             <div key={member._id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100 gap-4">
               <div className="flex items-center gap-3">
-                <Avatar name={member.fullName} size="md" />
+                <Avatar name={member.fullName} src={member.profileImage || member.avatar} size="md" />
                 <div>
                   <h3 className="font-semibold text-gray-900">{member.fullName}</h3>
                   <p className="text-xs text-gray-500">{member.email}</p>

@@ -489,9 +489,9 @@ const Dashboard = () => {
                     <div key={member._id} className="p-[20px] flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="relative">
-                          {member.profileImage ? (
+                          {member.profileImage || member.avatar ? (
                             <img 
-                              src={member.profileImage.startsWith('http') || member.profileImage.startsWith('data:') ? member.profileImage : `http://localhost:5000${member.profileImage}`} 
+                              src={(member.profileImage || member.avatar).startsWith('http') || (member.profileImage || member.avatar).startsWith('data:') ? (member.profileImage || member.avatar) : `http://localhost:5000${member.profileImage || member.avatar}`} 
                               alt={member.fullName} 
                               className="w-8 h-8 rounded-full object-cover" 
                             />

@@ -123,19 +123,12 @@ const Navbar = ({ onMenuClick }) => {
             className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1.5 rounded-[8px] transition-colors"
             onClick={() => setIsAvatarMenuOpen(!isAvatarMenuOpen)}
           >
-            {user?.profileImage || user?.avatar ? (
-              <img 
-                src={
-                  (user.profileImage || user.avatar).startsWith('http') || (user.profileImage || user.avatar).startsWith('data:') 
-                    ? (user.profileImage || user.avatar) 
-                    : `http://localhost:5000${user.profileImage || user.avatar}`
-                } 
-                alt="Profile" 
-                className="w-[32px] h-[32px] rounded-full object-cover border border-gray-200" 
-              />
-            ) : (
-              <Avatar name={user?.fullName || 'User'} size="sm" />
-            )}
+            <Avatar 
+              name={user?.fullName || 'User'} 
+              src={user?.profileImage || user?.avatar} 
+              size="sm" 
+              className="border border-gray-200"
+            />
             <span className="hidden sm:block text-[14px] font-medium text-gray-700">{user?.fullName || 'Admin User'}</span>
           </div>
           

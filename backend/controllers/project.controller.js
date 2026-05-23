@@ -1,14 +1,15 @@
 const Project = require('../models/Project');
 const Task = require('../models/Task');
 const User = require('../models/User');
+const Comment = require('../models/Comment');
 
 exports.getProjects = async (req, res) => {
   try {
     let projects;
     if (req.user.role === 'admin') {
-      projects = await Project.find({ owner: req.user.id }).populate('owner', 'fullName email').populate('members.user', 'fullName email').lean();
+      projects = await Project.find({ owner: req.user.id }).populate('owner', 'fullName email profileImage avatar').populate('members.user', 'fullName email profileImage avatar').lean();
     } else {
-      projects = await Project.find({ 'members.user': req.user.id }).populate('owner', 'fullName email').populate('members.user', 'fullName email').lean();
+      projects = await Project.find({ 'members.user': req.user.id }).populate('owner', 'fullName email profileImage avatar').populate('members.user', 'fullName email profileImage avatar').lean();
     }
     
     // Add task counts
@@ -45,8 +46,8 @@ exports.createProject = async (req, res) => {
 exports.getProjectById = async (req, res) => {
   try {
     const project = await Project.findById(req.params.id)
-      .populate('owner', 'fullName email')
-      .populate('members.user', 'fullName email role avatar');
+      .populate('owner', 'fullName email profileImage avatar')
+      .populate('members.user', 'fullName email role avatar profileImage');
 
     if (!project) {
       return res.status(404).json({ message: 'Project not found' });
@@ -58,10 +59,16 @@ exports.getProjectById = async (req, res) => {
     }
 
     const tasks = await Task.find({ project: req.params.id })
-      .populate('assignedTo', 'fullName email')
-      .populate('createdBy', 'fullName email');
+      .populate('assignedTo', 'fullName email profileImage avatar')
+      .populate('createdBy', 'fullName email profileImage avatar')
+      .lean();
 
-    res.json({ project, tasks });
+    const tasksWithComments = await Promise.all(tasks.map(async (task) => {
+      const commentsCount = await Comment.countDocuments({ task: task._id });
+      return { ...task, commentsCount };
+    }));
+
+    res.json({ project, tasks: tasksWithComments });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }

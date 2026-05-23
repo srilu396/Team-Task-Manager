@@ -44,8 +44,8 @@ const Tasks = () => {
       const cleanFilters = Object.fromEntries(
         Object.entries(filters).filter(([_, v]) => v !== '')
       );
-      // Force fetching only my tasks
-      if (user?.id || user?._id) {
+      // Force fetching only my tasks if not admin
+      if (user?.role !== 'admin' && (user?.id || user?._id)) {
         cleanFilters.assignedTo = user.id || user._id;
       }
       const data = await taskService.getTasks(cleanFilters);
@@ -198,7 +198,7 @@ const Tasks = () => {
                     <td className="px-6 py-4">
                       {task.assignedTo ? (
                         <div className="flex items-center gap-2" title={task.assignedTo.fullName}>
-                          <Avatar name={task.assignedTo.fullName} size="sm" />
+                          <Avatar name={task.assignedTo.fullName} src={task.assignedTo.profileImage || task.assignedTo.avatar} size="sm" />
                           <span className="text-sm text-gray-700 hidden lg:inline">{task.assignedTo.fullName}</span>
                         </div>
                       ) : (

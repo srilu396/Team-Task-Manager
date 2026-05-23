@@ -241,7 +241,7 @@ const ProjectDetail = () => {
               {project.members.map(member => (
                 <div key={member.user._id} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
                   <div className="flex items-center gap-3">
-                    <Avatar name={member.user.fullName} />
+                    <Avatar name={member.user.fullName} src={member.user.profileImage || member.user.avatar} />
                     <div>
                       <p className="font-medium text-gray-900">{member.user.fullName}</p>
                       <p className="text-sm text-gray-500">{member.user.email}</p>

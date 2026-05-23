@@ -7,7 +7,7 @@ exports.getStats = async (req, res) => {
 
     if (isAdmin) {
       const totalProjects = await Project.countDocuments({ owner: req.user.id });
-      const allProjects = await Project.find({ owner: req.user.id }).populate('members.user', 'fullName').lean();
+      const allProjects = await Project.find({ owner: req.user.id }).populate('members.user', 'fullName email profileImage avatar').lean();
       
       // Calculate unique members across all projects
       const uniqueMembers = new Set();
@@ -35,7 +35,8 @@ exports.getStats = async (req, res) => {
 
       const recentTasks = await Task.find({ project: { $in: projectIds } })
         .populate('project', 'name')
-        .populate('createdBy', 'fullName email')
+        .populate('createdBy', 'fullName email profileImage avatar')
+        .populate('assignedTo', 'fullName email profileImage avatar')
         .sort({ createdAt: -1 })
         .limit(10);
       
@@ -49,7 +50,7 @@ exports.getStats = async (req, res) => {
 
       const overdueTasksList = await Task.find({ project: { $in: projectIds }, status: { $ne: 'done' }, dueDate: { $lt: new Date() } })
         .populate('project', 'name')
-        .populate('assignedTo', 'fullName email')
+        .populate('assignedTo', 'fullName email profileImage avatar')
         .sort({ dueDate: 1 });
 
       const projectsProgress = await Promise.all(allProjects.map(async (project) => {
@@ -67,7 +68,7 @@ exports.getStats = async (req, res) => {
       if (req.user.teamCode) {
         userQuery.teamCode = req.user.teamCode;
       }
-      const allUsers = await require('../models/User').find(userQuery).select('fullName email profileImage').lean();
+      const allUsers = await require('../models/User').find(userQuery).select('fullName email profileImage avatar').lean();
       const teamOverview = await Promise.all(allUsers.map(async (u) => {
         const uTasks = await Task.countDocuments({ assignedTo: u._id });
         const uCompleted = await Task.countDocuments({ assignedTo: u._id, status: 'done' });

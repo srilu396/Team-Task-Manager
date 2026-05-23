@@ -51,6 +51,15 @@ const Team = () => {
     );
   };
 
+  const handleSelectAllToggle = () => {
+    const selectableUsers = users.filter(u => u.role !== 'admin' && u._id !== (currentUser.id || currentUser._id));
+    if (selectedUserIds.length === selectableUsers.length) {
+      setSelectedUserIds([]);
+    } else {
+      setSelectedUserIds(selectableUsers.map(u => u._id));
+    }
+  };
+
   const handleBulkAssign = async () => {
     if (!selectedProjectId) return;
     try {
@@ -101,11 +110,28 @@ const Team = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Team Members</h1>
           <p className="text-gray-500 mt-1">Manage system access and roles</p>
         </div>
+        {users.filter(u => u.role !== 'admin' && u._id !== (currentUser.id || currentUser._id)).length > 0 && (
+          <div className="flex items-center gap-2 bg-white px-4 py-2 border border-gray-200 rounded-xl shadow-sm hover:border-gray-300 transition-colors">
+            <input 
+              type="checkbox"
+              id="select-all"
+              checked={
+                selectedUserIds.length > 0 && 
+                selectedUserIds.length === users.filter(u => u.role !== 'admin' && u._id !== (currentUser.id || currentUser._id)).length
+              }
+              onChange={handleSelectAllToggle}
+              className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+            />
+            <label htmlFor="select-all" className="text-sm font-semibold text-gray-700 cursor-pointer select-none">
+              Select All Members
+            </label>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -131,7 +157,7 @@ const Team = () => {
                 />
               </div>
 
-              <Avatar name={u.fullName} size="xl" className="mb-4" />
+              <Avatar name={u.fullName} src={u.profileImage || u.avatar} size="xl" className="mb-4" />
               <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-1">{u.fullName}</h3>
               <p className="text-sm text-gray-500 mb-2 line-clamp-1">{u.email}</p>
               <p className="text-xs font-medium text-gray-600 mb-4 bg-gray-100 px-2 py-1 rounded-md">{u.assignedTasksCount || 0} Assigned Tasks</p>

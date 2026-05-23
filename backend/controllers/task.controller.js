@@ -33,11 +33,17 @@ exports.getTasks = async (req, res) => {
 
     const tasks = await Task.find(query)
       .populate('project', 'name')
-      .populate('assignedTo', 'fullName email')
-      .populate('createdBy', 'fullName email')
-      .sort({ createdAt: -1 });
+      .populate('assignedTo', 'fullName email profileImage avatar')
+      .populate('createdBy', 'fullName email profileImage avatar')
+      .sort({ createdAt: -1 })
+      .lean();
 
-    res.json(tasks);
+    const tasksWithComments = await Promise.all(tasks.map(async (task) => {
+      const commentsCount = await Comment.countDocuments({ task: task._id });
+      return { ...task, commentsCount };
+    }));
+
+    res.json(tasksWithComments);
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
@@ -62,8 +68,8 @@ exports.createTask = async (req, res) => {
     
     const populatedTask = await Task.findById(task._id)
       .populate('project', 'name')
-      .populate('assignedTo', 'fullName email')
-      .populate('createdBy', 'fullName email');
+      .populate('assignedTo', 'fullName email profileImage avatar')
+      .populate('createdBy', 'fullName email profileImage avatar');
 
     // Notify assigned member
     if (assignedTo) {
@@ -85,13 +91,13 @@ exports.getTaskById = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id)
       .populate('project', 'name')
-      .populate('assignedTo', 'fullName email')
-      .populate('createdBy', 'fullName email');
+      .populate('assignedTo', 'fullName email profileImage avatar')
+      .populate('createdBy', 'fullName email profileImage avatar');
 
     if (!task) return res.status(404).json({ message: 'Task not found' });
 
     const comments = await Comment.find({ task: req.params.id })
-      .populate('user', 'fullName email')
+      .populate('user', 'fullName email profileImage avatar')
       .sort({ createdAt: 1 });
 
     res.json({ task, comments });
@@ -119,8 +125,8 @@ exports.updateTask = async (req, res) => {
     
     const populatedTask = await Task.findById(task._id)
       .populate('project', 'name')
-      .populate('assignedTo', 'fullName email')
-      .populate('createdBy', 'fullName email');
+      .populate('assignedTo', 'fullName email profileImage avatar')
+      .populate('createdBy', 'fullName email profileImage avatar');
 
     // Trigger notifications if needed
     const newAssignedTo = task.assignedTo ? task.assignedTo.toString() : null;
@@ -196,7 +202,7 @@ exports.addComment = async (req, res) => {
 
     await comment.save();
     
-    const populatedComment = await Comment.findById(comment._id).populate('user', 'fullName email');
+    const populatedComment = await Comment.findById(comment._id).populate('user', 'fullName email profileImage avatar');
     
     // Send notifications
     const task = await Task.findById(req.params.id);

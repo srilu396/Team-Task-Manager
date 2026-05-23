@@ -41,7 +41,7 @@ const TaskCard = ({ task, onClick }) => {
           </div>
         </div>
         <div>
-          <Avatar name={task.assignedTo?.fullName || 'Unassigned'} size="sm" />
+          <Avatar name={task.assignedTo?.fullName || 'Unassigned'} src={task.assignedTo?.profileImage || task.assignedTo?.avatar} size="sm" />
         </div>
       </div>
     </div>

@@ -16,7 +16,7 @@ const Settings = () => {
         <div className="p-6 border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Profile Information</h2>
           <div className="flex items-center gap-6">
-            <Avatar name={user?.fullName || 'User'} size="xl" />
+            <Avatar name={user?.fullName || 'User'} src={user?.profileImage || user?.avatar} size="xl" />
             <div className="space-y-1">
               <h3 className="text-xl font-bold text-gray-900">{user?.fullName}</h3>
               <p className="text-gray-500">{user?.email}</p>

@@ -46,6 +46,7 @@ const ProjectCard = ({ project, onClick }) => {
             <Avatar 
               key={member.user._id || member.user} 
               name={member.user.fullName || 'User'} 
+              src={member.user.profileImage || member.user.avatar}
               size="sm" 
               className="border-2 border-white"
               style={{ zIndex: 10 - i }}
