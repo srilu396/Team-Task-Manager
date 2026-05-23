@@ -26,7 +26,17 @@ exports.signup = async (req, res) => {
     const payload = { userId: user.id };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
 
-    res.status(201).json({ token, user: { id: user.id, fullName: user.fullName, email: user.email, role: user.role } });
+    res.status(201).json({ 
+      token, 
+      user: { 
+        id: user.id, 
+        fullName: user.fullName, 
+        email: user.email, 
+        role: user.role,
+        profileImage: user.profileImage,
+        avatar: user.avatar
+      } 
+    });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
@@ -49,7 +59,17 @@ exports.login = async (req, res) => {
     const payload = { userId: user.id };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
 
-    res.json({ token, user: { id: user.id, fullName: user.fullName, email: user.email, role: user.role } });
+    res.json({ 
+      token, 
+      user: { 
+        id: user.id, 
+        fullName: user.fullName, 
+        email: user.email, 
+        role: user.role,
+        profileImage: user.profileImage,
+        avatar: user.avatar
+      } 
+    });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }

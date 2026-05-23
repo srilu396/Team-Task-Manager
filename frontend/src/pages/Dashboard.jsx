@@ -463,7 +463,11 @@ const Dashboard = () => {
                       <div className="flex items-center gap-3">
                         <div className="relative">
                           {member.profileImage ? (
-                            <img src={member.profileImage} alt={member.fullName} className="w-8 h-8 rounded-full object-cover" />
+                            <img 
+                              src={member.profileImage.startsWith('http') || member.profileImage.startsWith('data:') ? member.profileImage : `http://localhost:5000${member.profileImage}`} 
+                              alt={member.fullName} 
+                              className="w-8 h-8 rounded-full object-cover" 
+                            />
                           ) : (
                             <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-[12px]">
                               {member.fullName?.charAt(0) || 'U'}

@@ -99,9 +99,21 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           <div className="px-4 mt-auto pt-4 border-t border-gray-200">
              {user && (
                <div className="flex items-center gap-3 px-3.5 py-3 rounded-xl bg-white border border-gray-200/80 shadow-sm transition-all duration-200 hover:shadow-md hover:border-indigo-100">
-                 <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm">
-                   {user.fullName ? user.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'U'}
-                 </div>
+                 {user.profileImage || user.avatar ? (
+                   <img 
+                     src={
+                       (user.profileImage || user.avatar).startsWith('http') || (user.profileImage || user.avatar).startsWith('data:') 
+                         ? (user.profileImage || user.avatar) 
+                         : `http://localhost:5000${user.profileImage || user.avatar}`
+                     } 
+                     alt="Profile" 
+                     className="w-10 h-10 rounded-full object-cover border border-gray-200 shrink-0 shadow-sm" 
+                   />
+                 ) : (
+                   <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm">
+                     {user.fullName ? user.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'U'}
+                   </div>
+                 )}
                  <div className="flex-1 min-w-0">
                    <p className="text-[14px] font-bold text-gray-900 truncate leading-snug">{user.fullName}</p>
                    <span className="inline-flex items-center px-2 py-0.5 mt-0.5 rounded-full text-[10px] font-semibold bg-indigo-50 text-indigo-600 uppercase tracking-wider border border-indigo-100">

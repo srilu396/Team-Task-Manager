@@ -27,7 +27,14 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     const data = await authService.login(email, password);
     localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify({ id: data.user.id, name: data.user.fullName, email: data.user.email, role: data.user.role }));
+    localStorage.setItem('user', JSON.stringify({ 
+      id: data.user.id, 
+      name: data.user.fullName, 
+      email: data.user.email, 
+      role: data.user.role,
+      profileImage: data.user.profileImage,
+      avatar: data.user.avatar
+    }));
     setUser(data.user);
     return data;
   };
@@ -35,7 +42,14 @@ export const AuthProvider = ({ children }) => {
   const signup = async (fullName, email, password, role) => {
     const data = await authService.signup(fullName, email, password, role);
     localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify({ id: data.user.id, name: data.user.fullName, email: data.user.email, role: data.user.role }));
+    localStorage.setItem('user', JSON.stringify({ 
+      id: data.user.id, 
+      name: data.user.fullName, 
+      email: data.user.email, 
+      role: data.user.role,
+      profileImage: data.user.profileImage,
+      avatar: data.user.avatar
+    }));
     setUser(data.user);
     return data;
   };
@@ -48,6 +62,14 @@ export const AuthProvider = ({ children }) => {
 
   const updateUser = (updatedUser) => {
     setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify({
+      id: updatedUser.id || updatedUser._id,
+      name: updatedUser.fullName,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      profileImage: updatedUser.profileImage,
+      avatar: updatedUser.avatar
+    }));
   };
 
   const isAdmin = user?.role === 'admin';
