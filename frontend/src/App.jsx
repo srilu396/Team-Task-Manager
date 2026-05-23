@@ -14,6 +14,7 @@ import Tasks from './pages/Tasks';
 import Team from './pages/Team';
 import Settings from './pages/Settings';
 import MemberDashboard from './pages/MemberDashboard';
+import Landing from './pages/Landing';
 
 // Layout
 import Layout from './components/layout/Layout';
@@ -41,17 +42,19 @@ const AdminRoute = ({ children }) => {
 const AppRoutes = () => {
   return (
     <Routes>
+      <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       
-      <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-        <Route index element={<IndexRedirect />} />
-        <Route path="dashboard" element={<AdminRoute><Dashboard /></AdminRoute>} />
-        <Route path="projects" element={<Projects />} />
-        <Route path="projects/:id" element={<ProjectDetail />} />
-        <Route path="tasks" element={<AdminRoute><Tasks /></AdminRoute>} />
-        <Route path="my-tasks" element={<MemberDashboard />} />
-        <Route path="team" element={<AdminRoute><Team /></AdminRoute>} />
+      {/* Protected App Routes */}
+      <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+        <Route path="/dashboard" element={<AdminRoute><Dashboard /></AdminRoute>} />
+        <Route path="/projects" element={<Projects />} />
+        <Route path="/projects/:id" element={<ProjectDetail />} />
+        <Route path="/tasks" element={<AdminRoute><Tasks /></AdminRoute>} />
+        <Route path="/my-tasks" element={<MemberDashboard />} />
+        <Route path="/team" element={<AdminRoute><Team /></AdminRoute>} />
+        <Route path="/settings" element={<Settings />} />
       </Route>
     </Routes>
   );
