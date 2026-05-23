@@ -73,6 +73,15 @@ const ProfileImageUpload = () => {
 
   const displayImage = preview || user?.avatar || user?.profileImage;
 
+  const getImageUrl = (path) => {
+    if (!path) return '';
+    if (path.startsWith('http') || path.startsWith('data:')) return path;
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const baseUrl = apiUrl.replace(/\/api\/?$/, '');
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${baseUrl}${cleanPath}`;
+  };
+
   return (
     <div style={{ textAlign: 'center' }} className="mb-6">
       {/* Avatar Display */}
@@ -91,7 +100,7 @@ const ProfileImageUpload = () => {
       >
         {displayImage ? (
           <img
-            src={displayImage.startsWith('http') || displayImage.startsWith('data:') ? displayImage : `http://localhost:5000${displayImage}`}
+            src={getImageUrl(displayImage)}
             alt="Profile"
             style={{ 
               width: '100%', 

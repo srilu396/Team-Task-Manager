@@ -18,6 +18,15 @@ const Dashboard = () => {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  const getImageUrl = (path) => {
+    if (!path) return '';
+    if (path.startsWith('http') || path.startsWith('data:')) return path;
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const baseUrl = apiUrl.replace(/\/api\/?$/, '');
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${baseUrl}${cleanPath}`;
+  };
+
   const fetchStats = async () => {
     try {
       setError(false);
@@ -491,7 +500,7 @@ const Dashboard = () => {
                         <div className="relative">
                           {member.profileImage || member.avatar ? (
                             <img 
-                              src={(member.profileImage || member.avatar).startsWith('http') || (member.profileImage || member.avatar).startsWith('data:') ? (member.profileImage || member.avatar) : `http://localhost:5000${member.profileImage || member.avatar}`} 
+                              src={getImageUrl(member.profileImage || member.avatar)} 
                               alt={member.fullName} 
                               className="w-8 h-8 rounded-full object-cover" 
                             />

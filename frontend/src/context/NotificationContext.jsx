@@ -33,7 +33,9 @@ export const NotificationProvider = ({ children }) => {
 
     fetchNotifications();
 
-    const newSocket = io('http://localhost:5000');
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const socketUrl = apiUrl.replace(/\/api\/?$/, '');
+    const newSocket = io(socketUrl);
     setSocket(newSocket);
 
     newSocket.on('connect', () => {
