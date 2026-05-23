@@ -11,9 +11,43 @@ const app = express();
 connectDB();
 
 // Middleware
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:5173',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:3001',
+  'http://127.0.0.1:5173'
+];
+
+if (process.env.CLIENT_URL) {
+  const origins = process.env.CLIENT_URL.split(',').map(o => o.trim());
+  allowedOrigins.push(...origins);
+}
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
-  credentials: true
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, postman, or server-to-server)
+    if (!origin) return callback(null, true);
+    
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (allowed === '*') return true;
+      return allowed.toLowerCase() === origin.toLowerCase();
+    });
+
+    const isLocal = origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:');
+    const isVercel = origin.endsWith('.vercel.app');
+
+    if (isAllowed || isLocal || isVercel) {
+      callback(null, true);
+    } else {
+      console.warn(`Origin ${origin} blocked by CORS`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
 }));
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
