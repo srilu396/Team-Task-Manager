@@ -13,7 +13,7 @@
 |---------|-----|
 | 🚀 Live Application | https://team-task-manager-frontend-azure.vercel.app |
 | 💻 GitHub Repository | https://github.com/srilu396/Team-Task-Manager-frontend |
-| 📹 Demo Video | Coming Soon |
+| 📹 Demo Video | https://drive.google.com/file/d/1VhZW7MMnhHgvHf630ZDO3ijGHa0v0J02/view?usp=sharing |
 
 ---
 
